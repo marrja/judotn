@@ -84,18 +84,28 @@ const directives = htaccess
   .split('\n')
   .filter((l) => l.trim() && !l.trim().startsWith('#'))
   .join('\n');
-for (const p of [
+const DELETED = [
   '/about-us/',
   '/members-board/',
   '/sample-page/',
   '/sample-page/projets/',
   '/sample-page/news/',
-]) {
+  '/2023/06/20/ceremonie-a-lhonneur-de-mr-pascal-livolsi/',
+];
+for (const p of DELETED) {
   if (routes.has(p)) fail(`${p} was built but should be gone`);
   if (directives.includes(p)) fail(`${p} still has a redirect rule`);
 }
 if (!/ErrorDocument 404 \/404\.html/.test(htaccess)) fail('.htaccess: no ErrorDocument for 404');
-console.log('  5 AATUJA paths confirmed absent, 404 handler present');
+
+// Nothing AATUJA-related may reach the output, including asset filenames.
+for (const file of htmlFiles) {
+  const html = fs.readFileSync(file, 'utf8');
+  if (/aatuja|amitie-tunisie|association-tunisie/i.test(html)) {
+    fail(`AATUJA reference in ${path.relative(dist, file)}`);
+  }
+}
+console.log(`  ${DELETED.length} deleted paths absent, no AATUJA references, 404 handler present`);
 
 // ── 3. internal links resolve ───────────────────────────────────────────────
 section('internal links');
