@@ -26,11 +26,42 @@ ErrorDocument 404 /404.html
 
 # ── Redirects from the old WordPress site ─────────────────────────────
 RedirectMatch 301 ^/elementor-314/?$ /
-RedirectMatch 301 ^/category/news/?$ /actualites/
-RedirectMatch 301 ^/category/announcements/?$ /actualites/
-RedirectMatch 301 ^/category/documents/?$ /documents/
-RedirectMatch 301 ^/feed/?$ /rss.xml
+RedirectMatch 301 ^/category/news/?$ /fr/actualites/
+RedirectMatch 301 ^/category/announcements/?$ /fr/actualites/
+RedirectMatch 301 ^/category/documents/?$ /fr/documents/
+RedirectMatch 301 ^/feed/?$ /fr/rss.xml
 RedirectMatch 301 ^/wp-content/uploads/2024/06/(.+)\.pdf$ /documents/$1.pdf
+
+# ── French moved from the root to /fr/ ────────────────────────────────
+# Every URL that used to serve French content at the root now 301s to its
+# /fr/ counterpart, so no inbound link or bookmark breaks. Generated from the
+# current French content — deleted pages are absent and 404 as intended.
+RedirectMatch 301 ^/2023/10/16/accueil-de-lentraineur-japonais-izuru-tschiya-7e-dan-kendo-pour-participer-a-lencadrement-du-kendo-tunisien-pendant-2-ans/?$ /fr/2023/10/16/accueil-de-lentraineur-japonais-izuru-tschiya-7e-dan-kendo-pour-participer-a-lencadrement-du-kendo-tunisien-pendant-2-ans/
+RedirectMatch 301 ^/2023/10/16/accueil-de-lentraineur-japonais-taiga-moro-pour-participer-a-lencadrement-des-sessions-dentrainement-des-equipes-nationales-pendant-6-mois/?$ /fr/2023/10/16/accueil-de-lentraineur-japonais-taiga-moro-pour-participer-a-lencadrement-des-sessions-dentrainement-des-equipes-nationales-pendant-6-mois/
+RedirectMatch 301 ^/2026/07/21/championnat-afrique-cadets-maroc-2026/?$ /fr/2026/07/21/championnat-afrique-cadets-maroc-2026/
+RedirectMatch 301 ^/2026/07/12/formation-resilience-intelligence-emotionnelle/?$ /fr/2026/07/12/formation-resilience-intelligence-emotionnelle/
+RedirectMatch 301 ^/2023/12/03/la-tunisie-a-la-deuxieme-place-par-equipes-au-championnat-africain-senior-hommes-et-femmes-en-egypte/?$ /fr/2023/12/03/la-tunisie-a-la-deuxieme-place-par-equipes-au-championnat-africain-senior-hommes-et-femmes-en-egypte/
+RedirectMatch 301 ^/2024/03/30/officiellement-notre-championne-du-monde-junior-sarra-mzoughi-qualifiee-pour-les-jeux-olympiques-paris-2024/?$ /fr/2024/03/30/officiellement-notre-championne-du-monde-junior-sarra-mzoughi-qualifiee-pour-les-jeux-olympiques-paris-2024/
+RedirectMatch 301 ^/2026/07/10/tournee-beach-judo-soliman/?$ /fr/2026/07/10/tournee-beach-judo-soliman/
+RedirectMatch 301 ^/2024/06/25/aikido/?$ /fr/2024/06/25/aikido/
+RedirectMatch 301 ^/2024/06/25/cahier-des-charges-des-tournois/?$ /fr/2024/06/25/cahier-des-charges-des-tournois/
+RedirectMatch 301 ^/2024/06/25/code-sportif-et-dorganisation/?$ /fr/2024/06/25/code-sportif-et-dorganisation/
+RedirectMatch 301 ^/2024/06/25/kendo/?$ /fr/2024/06/25/kendo/
+RedirectMatch 301 ^/2024/06/25/reglement-des-passages-de-grades/?$ /fr/2024/06/25/reglement-des-passages-de-grades/
+RedirectMatch 301 ^/2024/06/25/reglement-interieur-de-la-commission-nationale-darbitrage-de-la-ftj/?$ /fr/2024/06/25/reglement-interieur-de-la-commission-nationale-darbitrage-de-la-ftj/
+RedirectMatch 301 ^/2024/06/25/regles-darbitrage-de-la-fij/?$ /fr/2024/06/25/regles-darbitrage-de-la-fij/
+RedirectMatch 301 ^/2024/06/25/regles-de-discipline/?$ /fr/2024/06/25/regles-de-discipline/
+RedirectMatch 301 ^/2024/06/25/statut-ftjudo/?$ /fr/2024/06/25/statut-ftjudo/
+RedirectMatch 301 ^/2024/06/25/statuts-des-ligues/?$ /fr/2024/06/25/statuts-des-ligues/
+RedirectMatch 301 ^/activites/?$ /fr/activites/
+RedirectMatch 301 ^/direction-technique/?$ /fr/direction-technique/
+RedirectMatch 301 ^/espace-clubs/?$ /fr/espace-clubs/
+RedirectMatch 301 ^/la-federation/?$ /fr/la-federation/
+RedirectMatch 301 ^/techniques/?$ /fr/techniques/
+RedirectMatch 301 ^/actualites/?$ /fr/actualites/
+RedirectMatch 301 ^/documents/?$ /fr/documents/
+RedirectMatch 301 ^/contact/?$ /fr/contact/
+RedirectMatch 301 ^/rss\.xml/?$ /fr/rss.xml
 
 # ── Compression ───────────────────────────────────────────────────────
 <IfModule mod_deflate.c>

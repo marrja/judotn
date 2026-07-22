@@ -15,8 +15,27 @@ import { BCP47, DIR, LOCALES, ui, type Locale } from './ui.ts';
 
 export { LOCALES, LOCALE_NAMES, DIR, BCP47, codeMoral, type Locale } from './ui.ts';
 
-/** French is served unprefixed so the WordPress permalinks survive untouched. */
+/**
+ * Every language is served under its own prefix — `/fr/`, `/en/`, `/ar/`. The
+ * bare root `/` is a browser-language detector that redirects into one of them
+ * (see src/pages/index.astro); old un-prefixed WordPress permalinks are
+ * 301-redirected to their `/fr/` equivalent by the generated .htaccess.
+ */
+
+/**
+ * The language the source content and the official PDFs are authored in. Used
+ * where "which language is this really written in" matters — e.g. the "PDF in
+ * French only" note — and as the typing base for the UI dictionary. It is NOT a
+ * routing default any more: nothing is served unprefixed.
+ */
 export const DEFAULT_LOCALE: Locale = 'fr';
+
+/**
+ * The language a visitor gets when their browser asks for none we publish, and
+ * the target of the `x-default` hreflang. English, per the site's language
+ * policy.
+ */
+export const FALLBACK_LOCALE: Locale = 'en';
 
 export const isLocale = (v: unknown): v is Locale => LOCALES.includes(v as Locale);
 
@@ -26,43 +45,40 @@ export const useTranslations =
   (key: keyof (typeof ui)['fr']): string =>
     ui[lang][key];
 
-/**
- * The value of the `[...lang]` rest param for a locale: `undefined` for
- * French, which is what makes Astro emit it at the un-prefixed root.
- */
-export const langParam = (lang: Locale): string | undefined =>
-  lang === DEFAULT_LOCALE ? undefined : lang;
+/** The value of the `[lang]` route param for a locale — the locale itself. */
+export const langParam = (lang: Locale): string => lang;
 
 /** Every locale as a `getStaticPaths` param entry. */
 export const localeParams = () => LOCALES.map((lang) => ({ params: { lang: langParam(lang) } }));
 
-/** Read the `[...lang]` rest param back into a Locale. */
+/** Read the `[lang]` route param back into a Locale. */
 export const localeFromParam = (param: string | undefined): Locale =>
-  isLocale(param) ? param : DEFAULT_LOCALE;
+  isLocale(param) ? param : FALLBACK_LOCALE;
 
 /**
  * Prefix a root-relative path for a locale.
- * `('en', '/documents/')` → `/en/documents/`; French is returned unchanged.
+ * `('en', '/documents/')` → `/en/documents/`. Every locale is prefixed.
  */
 export function localePath(lang: Locale, path = '/'): string {
   const clean = path.startsWith('/') ? path : `/${path}`;
-  return lang === DEFAULT_LOCALE ? clean : `/${lang}${clean}`;
+  return `/${lang}${clean}`;
 }
 
 /**
- * Inverse of `localePath`: split a built pathname into its locale and the
- * canonical (French) path. Used by the language switcher to point at the
- * current page's counterpart rather than dumping the visitor on the home page.
+ * Inverse of `localePath`: split a prefixed pathname into its locale and the
+ * canonical (un-prefixed) path. Used by the language switcher and by hreflang
+ * to point at the current page's counterpart in each language.
  *
- * Only an exact non-default locale segment is stripped, so a future French
- * page at `/entrainement/` can never be mistaken for a locale prefix.
+ * A pathname whose first segment is not a locale (the root detector, robots,
+ * the 404) has no locale to strip; it reports the fallback and is returned
+ * unchanged, which none of those callers use for routing.
  */
 export function stripLocale(pathname: string): { lang: Locale; path: string } {
   const [, first = '', ...rest] = pathname.split('/');
-  if (isLocale(first) && first !== DEFAULT_LOCALE) {
+  if (isLocale(first)) {
     return { lang: first, path: `/${rest.join('/')}` };
   }
-  return { lang: DEFAULT_LOCALE, path: pathname };
+  return { lang: FALLBACK_LOCALE, path: pathname };
 }
 
 /** Every locale's URL for the same page, for hreflang and the switcher. */

@@ -20,5 +20,5 @@ statistiques et aux résultats via le portail sportif fédéral.
 
 ## Textes applicables
 
-Les [statuts des ligues](/documents/), le code sportif et le cahier des charges des
+Les [statuts des ligues](/fr/documents/), le code sportif et le cahier des charges des
 tournois encadrent l'activité des clubs.

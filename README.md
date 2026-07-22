@@ -29,12 +29,19 @@ npm run dev        # http://localhost:4321
 
 ## Languages (FR / EN / AR)
 
-The site is trilingual: **French** (the default, served at the root),
-**English** under `/en/`, and **Arabic** under `/ar/` (right-to-left).
+The site is trilingual, each language under its own prefix: **French** at
+`/fr/`, **English** at `/en/`, **Arabic** at `/ar/` (right-to-left).
 
-French stays unprefixed on purpose — every URL inherited from WordPress is a
-French permalink at the root, and `npm test` fails if one moves. English and
-Arabic are the same paths behind an `/en/` or `/ar/` prefix.
+The bare root `/` is a **language gate**: it detects the visitor's browser
+language and redirects to `/fr/`, `/en/` or `/ar/`, falling back to **English**
+when the browser asks for none of the three. It also shows a manual chooser for
+visitors without JavaScript.
+
+Because French used to live at the root, every old un-prefixed URL
+(`/2024/06/25/slug/`, `/documents/`, `/la-federation/`, …) now **301-redirects**
+to its `/fr/` counterpart — generated automatically from the current French
+content, so no inbound link or bookmark breaks. `npm test` fails if one is
+missing.
 
 Two rules make the whole thing work:
 
@@ -80,9 +87,14 @@ Le corps de l’article, en Markdown. Il peut être vide.
 ```
 
 Only `title`, `coverAlt`, `tags` and the body change between languages — `date`,
-`cover` and **`url` stay identical in all three files** (the `/en/` and `/ar/`
-prefixes are added automatically). The Arabic file is written in Arabic, and the
-page turns right-to-left on its own.
+`cover` and **`url` stay identical in all three files** (the `/fr/`, `/en/` and
+`/ar/` prefixes are added automatically). The Arabic file is written in Arabic,
+and the page turns right-to-left on its own.
+
+If the body links to another page on the site, **prefix the link with the same
+language** — `[Documents](/fr/documents/)` in a French file, `/en/documents/` in
+an English one. An un-prefixed `/documents/` still works (it 301s to `/fr/`) but
+costs a redirect hop.
 
 Put the image in `src/assets/posts/` first (once — it's shared). Astro converts
 it to WebP and generates the responsive sizes automatically; use the original,
@@ -158,6 +170,7 @@ src/
   i18n/
     ui.ts              every interface string, in all three languages (French is the source of truth)
     index.ts           locale helpers: URLs, dates, file sizes
+    detect.ts          browser-language pick for the root gate (also runs client-side)
   layouts/BaseLayout.astro
   lib/content.ts       locale-aware access to the collections
   pages/               routes (see below)
@@ -178,24 +191,26 @@ scripts/
 
 ### Routes
 
-Every route lives under `pages/[...lang]/`. The leading `[...lang]` segment is
-empty for French (so the page builds at the root) and becomes `en` or `ar` for
-the other two — one source file produces all three language versions.
+The localized routes live under `pages/[lang]/`, where `[lang]` is exactly one
+of `fr` / `en` / `ar` — one source file produces all three language versions.
+The bare root `/` is a separate page: the browser-language gate.
 
-| File                                                | Generates (× fr / en / ar)                                               |
-| --------------------------------------------------- | ------------------------------------------------------------------------ |
-| `pages/[...lang]/index.astro`                       | `/`, `/en/`, `/ar/`                                                      |
-| `pages/[...lang]/[year]/[month]/[day]/[slug].astro` | the 18 posts and documents, at their WordPress URLs (prefixed for en/ar) |
-| `pages/[...lang]/[page].astro`                      | the 5 section pages                                                      |
-| `pages/[...lang]/actualites/index.astro`            | `/actualites/`                                                           |
-| `pages/[...lang]/documents/index.astro`             | `/documents/`                                                            |
-| `pages/[...lang]/contact.astro`                     | `/contact/`                                                              |
-| `pages/[...lang]/rss.xml.ts`                        | `/rss.xml` (one feed per language)                                       |
-| `pages/404.astro`                                   | `/404` — a single French page (Apache serves one ErrorDocument)          |
-| `pages/robots.txt.ts`                               | `/robots.txt`                                                            |
+| File                                             | Generates                                                       |
+| ------------------------------------------------ | --------------------------------------------------------------- |
+| `pages/index.astro`                              | `/` — browser-language gate, redirects to `/fr`, `/en` or `/ar` |
+| `pages/[lang]/index.astro`                       | `/fr/`, `/en/`, `/ar/`                                          |
+| `pages/[lang]/[year]/[month]/[day]/[slug].astro` | the posts and documents, at their WordPress URLs, prefixed      |
+| `pages/[lang]/[page].astro`                      | the 5 section pages                                             |
+| `pages/[lang]/actualites/index.astro`            | `/{lang}/actualites/`                                           |
+| `pages/[lang]/documents/index.astro`             | `/{lang}/documents/`                                            |
+| `pages/[lang]/contact.astro`                     | `/{lang}/contact/`                                              |
+| `pages/[lang]/rss.xml.ts`                        | `/{lang}/rss.xml` (one feed per language)                       |
+| `pages/404.astro`                                | `/404` — one English page (Apache serves one ErrorDocument)     |
+| `pages/robots.txt.ts`                            | `/robots.txt`                                                   |
 
 `sitemap-index.xml` comes from `@astrojs/sitemap`, configured to emit `hreflang`
-alternates for all three languages.
+alternates for all three languages (the root gate is excluded). The un-prefixed
+→ `/fr/` redirects are generated into `public/.htaccess` by `gen-redirects.mjs`.
 
 ---
 

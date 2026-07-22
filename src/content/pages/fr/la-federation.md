@@ -22,4 +22,4 @@ et l'amitié.
 ## Documents de référence
 
 Les statuts, le code sportif et les règlements de la Fédération sont publiés dans
-la section [Documents](/documents/).
+la section [Documents](/fr/documents/).

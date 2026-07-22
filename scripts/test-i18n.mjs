@@ -12,6 +12,7 @@ import assert from 'node:assert/strict';
 import {
   LOCALES,
   DEFAULT_LOCALE,
+  FALLBACK_LOCALE,
   alternates,
   codeMoral,
   formatBytes,
@@ -24,29 +25,28 @@ import {
   useTranslations,
 } from '../src/i18n/index.ts';
 import { ui } from '../src/i18n/ui.ts';
+import { DETECT_LOCALES, DETECT_FALLBACK, pickLocale } from '../src/i18n/detect.ts';
 
-test('French is the unprefixed default, so legacy permalinks are untouched', () => {
-  assert.equal(DEFAULT_LOCALE, 'fr');
-  assert.equal(
-    localePath('fr', '/2024/06/25/communique-202-000521/'),
-    '/2024/06/25/communique-202-000521/',
-  );
-  assert.equal(langParam('fr'), undefined);
-});
-
-test('localePath prefixes the non-default locales', () => {
+test('every language is served under its own prefix, including French', () => {
+  assert.equal(localePath('fr', '/2024/06/25/statut-ftjudo/'), '/fr/2024/06/25/statut-ftjudo/');
   assert.equal(localePath('en', '/documents/'), '/en/documents/');
   assert.equal(localePath('ar', '/documents/'), '/ar/documents/');
+  assert.equal(localePath('fr', '/'), '/fr/');
   assert.equal(localePath('en', '/'), '/en/');
   assert.equal(localePath('ar', '/'), '/ar/');
-  assert.equal(localePath('fr', '/'), '/');
+});
+
+test('langParam is the locale itself (all locales are prefixed)', () => {
+  assert.equal(langParam('fr'), 'fr');
+  assert.equal(langParam('en'), 'en');
+  assert.equal(langParam('ar'), 'ar');
 });
 
 test('localePath tolerates a path with no leading slash', () => {
   assert.equal(localePath('en', 'documents/'), '/en/documents/');
 });
 
-test('stripLocale is the exact inverse of localePath', () => {
+test('stripLocale is the exact inverse of localePath, for every locale', () => {
   for (const lang of LOCALES) {
     for (const path of ['/', '/documents/', '/2024/06/25/slug/', '/actualites/']) {
       const built = localePath(lang, path);
@@ -55,38 +55,62 @@ test('stripLocale is the exact inverse of localePath', () => {
   }
 });
 
-test('stripLocale only strips an exact locale segment', () => {
-  // A future French page could legitimately start with these letters; the
-  // switcher must not mistake the first segment for a locale prefix.
-  assert.deepEqual(stripLocale('/entrainement/'), { lang: 'fr', path: '/entrainement/' });
-  assert.deepEqual(stripLocale('/arbitrage/'), { lang: 'fr', path: '/arbitrage/' });
-  assert.deepEqual(stripLocale('/english-corner/'), { lang: 'fr', path: '/english-corner/' });
+test('stripLocale on a non-prefixed path reports the fallback and leaves it unchanged', () => {
+  // Only the root gate, robots and the 404 are un-prefixed; none route by this.
+  assert.deepEqual(stripLocale('/404/'), { lang: FALLBACK_LOCALE, path: '/404/' });
+  assert.deepEqual(stripLocale('/'), { lang: FALLBACK_LOCALE, path: '/' });
 });
 
 test('alternates gives all three locales from any locale of the same page', () => {
-  const fromFr = alternates('/documents/');
+  const fromFr = alternates('/fr/documents/');
   const fromAr = alternates('/ar/documents/');
   assert.deepEqual(fromFr, fromAr, 'hreflang set must not depend on the current locale');
   assert.deepEqual(
     fromFr.map((a) => a.href),
-    ['/documents/', '/en/documents/', '/ar/documents/'],
+    ['/fr/documents/', '/en/documents/', '/ar/documents/'],
   );
   assert.equal(fromFr.find((a) => a.lang === 'ar')?.dir, 'rtl');
 });
 
-test('localeParams produces the getStaticPaths fan-out, French as undefined', () => {
+test('localeParams produces the getStaticPaths fan-out for all three prefixes', () => {
   assert.deepEqual(localeParams(), [
-    { params: { lang: undefined } },
+    { params: { lang: 'fr' } },
     { params: { lang: 'en' } },
     { params: { lang: 'ar' } },
   ]);
 });
 
-test('localeFromParam falls back to French for anything unrecognised', () => {
-  assert.equal(localeFromParam(undefined), 'fr');
+test('localeFromParam falls back to English for anything unrecognised', () => {
+  assert.equal(localeFromParam('fr'), 'fr');
   assert.equal(localeFromParam('en'), 'en');
   assert.equal(localeFromParam('ar'), 'ar');
-  assert.equal(localeFromParam('de'), 'fr');
+  assert.equal(localeFromParam(undefined), FALLBACK_LOCALE);
+  assert.equal(localeFromParam('de'), FALLBACK_LOCALE);
+});
+
+test('the two default concepts are what the routing expects', () => {
+  assert.equal(DEFAULT_LOCALE, 'fr'); // source/content language
+  assert.equal(FALLBACK_LOCALE, 'en'); // browser-miss + x-default
+});
+
+test('pickLocale matches on the base subtag and falls back to English', () => {
+  assert.equal(pickLocale(['fr-FR', 'fr', 'en-US']), 'fr');
+  assert.equal(pickLocale(['en-GB']), 'en');
+  assert.equal(pickLocale(['ar-TN', 'ar']), 'ar');
+  assert.equal(pickLocale(['AR']), 'ar', 'case-insensitive');
+  // First matching preference wins, even if a later one also matches.
+  assert.equal(pickLocale(['de-DE', 'ar', 'fr']), 'ar');
+  // No published language among the preferences → fallback.
+  assert.equal(pickLocale(['de', 'es', 'it']), 'en');
+  assert.equal(pickLocale([]), 'en');
+  assert.equal(pickLocale(undefined), 'en');
+});
+
+test('the detector locale set never drifts from the app locale set', () => {
+  // detect.ts duplicates the locale list to stay DOM-free and tiny; this keeps
+  // the copy honest.
+  assert.deepEqual([...DETECT_LOCALES].sort(), [...LOCALES].sort());
+  assert.equal(DETECT_FALLBACK, FALLBACK_LOCALE);
 });
 
 test('dates use Tunisian month names in Arabic, not the Mashriq set', () => {

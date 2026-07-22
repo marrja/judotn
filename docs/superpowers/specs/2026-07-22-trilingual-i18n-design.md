@@ -3,6 +3,16 @@
 **Date:** 2026-07-22
 **Status:** implemented
 
+> **Revision 2026-07-23 — all languages prefixed + browser gate.** The original
+> design kept French at the un-prefixed root to preserve the WordPress
+> permalinks. That was reversed by request: every language now has its own
+> prefix (`/fr/`, `/en/`, `/ar/`), the bare root `/` is a browser-language
+> detector that redirects (fallback English), and every old un-prefixed French
+> URL 301s to its `/fr/` equivalent — the redirects are generated from the
+> current French content by `gen-redirects.mjs`, so nothing inbound breaks and
+> deleted content still 404s. `x-default` and the 404 now point at English. The
+> notes below marked "(superseded)" describe the original root-French model.
+
 Make the Fédération Tunisienne de Judo site available in French, English and
 Arabic, and publish two Arabic-sourced news posts (the African cadet
 championship delegation, dated 21-07-2026, and a coach-training day, dated
@@ -10,12 +20,11 @@ championship delegation, dated 21-07-2026, and a coach-training day, dated
 
 ## Constraints that shaped everything
 
-- **French must stay at the un-prefixed root.** Every URL inherited from
-  WordPress is a French permalink (`/2024/06/25/slug/`), and `verify-build.mjs`
-  fails if one stops resolving. So only English and Arabic can take a path
-  prefix. Astro's `i18n.routing.prefixDefaultLocale: false` produces exactly
-  this shape — verified empirically with a throwaway `[...lang]/probe` route
-  before committing to the design.
+- **(superseded)** The original model kept French at the un-prefixed root
+  (`prefixDefaultLocale: false`) because every inherited WordPress permalink is
+  a root French URL. Revision 2 moved French to `/fr/` and instead 301-redirects
+  every old bare path to its `/fr/` equivalent, so the permalinks are preserved
+  by redirect rather than by position.
 - **Content is tiny** (~9 KB of Markdown; every post is a title + image with a
   near-empty body, every page a placeholder stub), so translating it by hand is
   hours, not weeks. The real work is the chrome: ~100 UI strings, RTL, and an
@@ -26,9 +35,10 @@ championship delegation, dated 21-07-2026, and a coach-training day, dated
 
 ## Architecture
 
-- **Routing:** one `[...lang]/` route tree. The leading rest param is `undefined`
-  for French (root) and `en`/`ar` for the others. Seven route files instead of
-  eighteen.
+- **Routing:** one `[lang]/` route tree (`fr`/`en`/`ar`, all prefixed), plus a
+  standalone `pages/index.astro` at the root — the browser-language gate that
+  redirects (JS via a bundled `pickLocale`, `<noscript>` chooser fallback,
+  English default). _(Revision 1 used `[...lang]/` with French at the root.)_
 - **Content:** one directory per locale — `content/{posts,documents,pages}/{fr,en,ar}/`.
   The **filename is the translation key**: same name across locales = same item,
   which is all the language switcher needs. No `translationKey` field. A

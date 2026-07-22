@@ -1,16 +1,16 @@
 ---
 /**
- * Single 404 page, in French, served at the root.
+ * Single 404 page, served at the root for any missing URL.
  *
  * Apache/LiteSpeed takes exactly one `ErrorDocument` path, so there is no way
- * to serve a per-language 404 from static hosting. It therefore leads with the
- * default language and offers all three home pages, so a reader who arrived on
- * a bad /en/ or /ar/ URL is one click from their own language.
+ * to serve a per-language 404 from static hosting. It leads with the fallback
+ * language (English) and offers all three home pages, so a reader who arrived
+ * on a bad /fr/ or /ar/ URL is one click from their own language.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { primaryNav } from '../navigation.ts';
 import {
-  DEFAULT_LOCALE,
+  FALLBACK_LOCALE,
   LOCALE_NAMES,
   LOCALES,
   localePath,
@@ -18,7 +18,8 @@ import {
 } from '../i18n/index.ts';
 import { BCP47 } from '../i18n/ui.ts';
 
-const t = useTranslations(DEFAULT_LOCALE);
+const base = FALLBACK_LOCALE;
+const t = useTranslations(base);
 ---
 
 <BaseLayout title={t('notFound.title')} description={t('notFound.description')} noindex>
@@ -31,7 +32,7 @@ const t = useTranslations(DEFAULT_LOCALE);
       <nav aria-label={t('a11y.mainSections')}>
         <ul>
           {
-            primaryNav(DEFAULT_LOCALE).map((i) => (
+            primaryNav(base).map((i) => (
               <li>
                 <a href={i.href}>{i.label}</a>
               </li>
@@ -41,10 +42,10 @@ const t = useTranslations(DEFAULT_LOCALE);
       </nav>
 
       <div class="actions">
-        <a class="home" href={localePath(DEFAULT_LOCALE, '/')}>{t('notFound.home')}</a>
+        <a class="home" href={localePath(base, '/')}>{t('notFound.home')}</a>
         <ul class="langs">
           {
-            LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((l) => (
+            LOCALES.filter((l) => l !== base).map((l) => (
               <li>
                 <a href={localePath(l, '/')} hreflang={BCP47[l]} lang={BCP47[l]}>
                   {LOCALE_NAMES[l]}

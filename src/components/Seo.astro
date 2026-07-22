@@ -1,5 +1,12 @@
 ---
-import { alternates, BCP47, stripLocale, useTranslations } from '../i18n/index.ts';
+import {
+  alternates,
+  BCP47,
+  FALLBACK_LOCALE,
+  localePath,
+  stripLocale,
+  useTranslations,
+} from '../i18n/index.ts';
 
 interface Props {
   title: string;
@@ -39,8 +46,9 @@ const langAlternates = alternates(Astro.url.pathname).map((a) => ({
   hreflang: BCP47[a.lang],
   href: new URL(a.href, Astro.site).href,
 }));
-/** x-default points at French: it is the unprefixed root of the site. */
-const xDefault = new URL(alternates(Astro.url.pathname)[0]!.href, Astro.site).href;
+/** x-default points at the English version — the site's declared fallback. */
+const { path: canonicalPath } = stripLocale(Astro.url.pathname);
+const xDefault = new URL(localePath(FALLBACK_LOCALE, canonicalPath), Astro.site).href;
 ---
 
 <title>{fullTitle}</title>

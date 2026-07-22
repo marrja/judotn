@@ -43,14 +43,15 @@ const htmlFiles = [];
   }
 })(dist);
 
-// ── 1. every routed entry resolves, at the root for FR and prefixed for en/ar ─
-// The French `url` is the inherited WordPress permalink: it must build at the
-// bare root, unprefixed, or the redirect map and every old inbound link break.
+// ── 1. every routed entry resolves under its language prefix ─────────────────
+// Every language is now served prefixed — /fr/, /en/, /ar/ — including French.
+// The `url` field is the un-prefixed permalink; the built page is that path
+// behind the locale prefix.
 section('routed permalinks');
 const LOCALES = ['fr', 'en', 'ar'];
 const collections = ['posts', 'documents'];
 let urlCount = 0;
-let frLegacyCount = 0;
+const frUrls = []; // bare French permalinks — checked for their move redirect below
 for (const col of collections) {
   for (const lang of LOCALES) {
     const dir = path.join(root, 'src/content', col, lang);
@@ -65,14 +66,14 @@ for (const col of collections) {
         fail(`${col}/${lang}/${f}: no url in frontmatter`);
         continue;
       }
-      const built = lang === 'fr' ? url : `/${lang}${url}`;
+      const built = `/${lang}${url}`;
       urlCount++;
-      if (lang === 'fr') frLegacyCount++;
+      if (lang === 'fr') frUrls.push(url);
       if (!routes.has(built)) fail(`${col}/${lang}/${f}: ${built} was not built`);
     }
   }
 }
-console.log(`  checked ${urlCount} routed URLs (${frLegacyCount} French permalinks at root)`);
+console.log(`  checked ${urlCount} routed URLs, all prefixed`);
 
 // Every routed entry must exist in all three languages: a missing translation
 // would leave a language switcher link pointing at a 404.
@@ -106,9 +107,9 @@ for (const r of redirects) {
 }
 console.log(`  checked ${redirects.length} redirects`);
 
-// AATUJA content was deleted rather than redirected: these paths must 404,
-// which means no built page AND no redirect rule pointing at them.
-section('deleted AATUJA paths');
+// Deleted content must 404, not redirect: no built page AND no redirect rule
+// pointing at it. Covers the AATUJA pages and the two posts removed by request.
+section('deleted paths');
 const htaccess = fs.readFileSync(path.join(dist, '.htaccess'), 'utf8');
 // Directives only — comments may legitimately mention these paths.
 const directives = htaccess
@@ -122,9 +123,12 @@ const DELETED = [
   '/sample-page/projets/',
   '/sample-page/news/',
   '/2023/06/20/ceremonie-a-lhonneur-de-mr-pascal-livolsi/',
+  '/2024/06/25/communique-202-000521/',
+  '/2024/06/25/programme-du-championnat-national-seniors-h-f/',
 ];
 for (const p of DELETED) {
   if (routes.has(p)) fail(`${p} was built but should be gone`);
+  if (routes.has(`/fr${p}`)) fail(`/fr${p} was built but should be gone`);
   if (directives.includes(p)) fail(`${p} still has a redirect rule`);
 }
 if (!/ErrorDocument 404 \/404\.html/.test(htaccess)) fail('.htaccess: no ErrorDocument for 404');
@@ -137,6 +141,32 @@ for (const file of htmlFiles) {
   }
 }
 console.log(`  ${DELETED.length} deleted paths absent, no AATUJA references, 404 handler present`);
+
+// ── Every old un-prefixed French URL 301s to its /fr/ counterpart ────────────
+// French moved from the root to /fr/, so every bare path that worked before
+// must now redirect, or an inbound link breaks. The set is the French content
+// plus the standalone section/index routes.
+section('language-prefix redirects');
+const frSectionPaths = fs
+  .readdirSync(path.join(root, 'src/content/pages/fr'))
+  .filter((f) => f.endsWith('.md'))
+  .map((f) => `/${f.replace(/\.md$/, '')}/`);
+const bareFrPaths = [
+  ...frUrls,
+  ...frSectionPaths,
+  '/actualites/',
+  '/documents/',
+  '/contact/',
+  '/rss.xml',
+];
+for (const p of bareFrPaths) {
+  if (routes.has(p)) fail(`${p} still builds un-prefixed (should have moved to /fr${p})`);
+  if (!directives.includes(`/fr${p}`)) fail(`${p} has no 301 to /fr${p}`);
+}
+// The root itself is the language gate, NOT a redirect to a language.
+if (directives.match(/^RedirectMatch\s+301\s+\^\/\?\$/m))
+  fail('/ must be the language gate, not a redirect');
+console.log(`  ${bareFrPaths.length} bare French paths redirect to /fr/`);
 
 // ── 3. internal links resolve ───────────────────────────────────────────────
 section('internal links');
@@ -193,7 +223,17 @@ console.log(`  scanned ${htmlFiles.length} pages`);
 
 // ── 5. required files present ───────────────────────────────────────────────
 section('required files');
-for (const f of ['sitemap-index.xml', 'rss.xml', 'robots.txt', '404.html', '.htaccess']) {
+// index.html is the root language gate; RSS is now one feed per language.
+for (const f of [
+  'index.html',
+  'sitemap-index.xml',
+  'robots.txt',
+  '404.html',
+  '.htaccess',
+  'fr/rss.xml',
+  'en/rss.xml',
+  'ar/rss.xml',
+]) {
   if (!fs.existsSync(path.join(dist, f))) fail(`missing dist/${f}`);
 }
 const pdfs = fs.existsSync(path.join(dist, 'documents'))
@@ -202,19 +242,33 @@ const pdfs = fs.existsSync(path.join(dist, 'documents'))
 if (pdfs.length !== 10) fail(`expected 10 PDFs in dist/documents, found ${pdfs.length}`);
 console.log(`  ${pdfs.length} PDFs present`);
 
-// ── 6. accessibility & SEO basics on every page ─────────────────────────────
+// The root gate redirects by language; it must offer all three as a no-JS
+// fallback and stay out of the index.
+const gate = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+for (const home of ['/fr/', '/en/', '/ar/']) {
+  if (!gate.includes(`href="${home}"`)) fail(`root gate: no link to ${home}`);
+}
+if (!/name="robots"\s+content="noindex/.test(gate)) fail('root gate: should be noindex');
+
+// ── 6. accessibility & SEO basics on every content page ─────────────────────
 // The expected lang/dir come from the URL prefix: /ar/… is Arabic and RTL,
-// /en/… is English, everything else is French. The 404 is French by design.
+// /en/… English, /fr/… French. The 404 renders in the fallback language
+// (English). The root gate (index.html) is a bare redirect shell and is
+// exempt — it has no shared chrome, <main> or <h1>.
 section('per-page head + a11y');
 const langForRoute = (rel) => {
+  if (rel === '404.html') return { lang: 'en', dir: 'ltr' };
   const seg = rel.split('/')[0];
   if (seg === 'ar') return { lang: 'ar-TN', dir: 'rtl' };
-  if (seg === 'en') return { lang: 'en', dir: 'ltr' };
-  return { lang: 'fr-TN', dir: 'ltr' };
+  if (seg === 'fr') return { lang: 'fr-TN', dir: 'ltr' };
+  return { lang: 'en', dir: 'ltr' };
 };
+let contentPages = 0;
 for (const file of htmlFiles) {
-  const html = fs.readFileSync(file, 'utf8');
   const rel = path.relative(dist, file).split(path.sep).join('/');
+  if (rel === 'index.html') continue; // the root language gate — no shared chrome
+  contentPages++;
+  const html = fs.readFileSync(file, 'utf8');
   const { lang, dir } = langForRoute(rel);
   if (!html.includes(`<html lang="${lang}" dir="${dir}">`))
     fail(`${rel}: expected <html lang="${lang}" dir="${dir}">`);
@@ -228,7 +282,9 @@ for (const file of htmlFiles) {
     if (!/\balt=/.test(img[0])) fail(`${rel}: <img> without alt`);
   }
 }
-console.log(`  ${htmlFiles.length} pages carry the right lang/dir, title, description, canonical`);
+console.log(
+  `  ${contentPages} content pages carry the right lang/dir, title, description, canonical`,
+);
 
 // ── 7. i18n: hreflang, tri-locale parity, Arabic actually rendered ──────────
 section('i18n wiring');
@@ -237,16 +293,15 @@ section('i18n wiring');
 // pages (posts/documents) are also translated, but the assertions above already
 // prove the alternates were built; here we spot-check the top-level pages.
 const HREFLANGS = ['fr-TN', 'en', 'ar-TN', 'x-default'];
-const i18nPages = htmlFiles.filter((f) => {
-  const rel = path.relative(dist, f).split(path.sep).join('/');
-  return rel === 'index.html' || rel === 'en/index.html' || rel === 'ar/index.html';
-});
-for (const file of i18nPages) {
-  const html = fs.readFileSync(file, 'utf8');
-  const rel = path.relative(dist, file).split(path.sep).join('/');
+const i18nPages = ['fr/index.html', 'en/index.html', 'ar/index.html'];
+for (const rel of i18nPages) {
+  const html = fs.readFileSync(path.join(dist, rel), 'utf8');
   for (const hl of HREFLANGS) {
     if (!html.includes(`hreflang="${hl}"`)) fail(`${rel}: missing hreflang="${hl}"`);
   }
+  // x-default points at the English fallback, not French.
+  if (!/hreflang="x-default"\s+href="[^"]*\/en\/"/.test(html))
+    fail(`${rel}: x-default hreflang should point at the /en/ home`);
 }
 // The Arabic home must actually contain Arabic script and the Tunisian month
 // name — a guard against Intl silently falling back to Latin or Mashriq forms.
@@ -260,14 +315,14 @@ if (!arNews.includes('جويلية')) fail('ar news post: Tunisian month name "�
 if (/يوليو/.test(arNews)) fail('ar news post: Mashriq month name leaked in — wrong Intl locale');
 // The Arabic font is heavy; only the Arabic build should preload it.
 if (!arHome.includes('noto-sans-arabic')) fail('ar/index.html: Arabic font not preloaded');
-const frHome = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+const frHome = fs.readFileSync(path.join(dist, 'fr/index.html'), 'utf8');
 if (frHome.includes('noto-sans-arabic'))
-  fail('index.html: French build preloads the Arabic font (166 kB wasted)');
+  fail('fr/index.html: French build preloads the Arabic font (166 kB wasted)');
 console.log('  hreflang complete on home pages; Arabic rendered with Tunisian dates');
 
 console.log(
   failures === 0
-    ? `\nAll checks passed — ${htmlFiles.length} pages, ${frLegacyCount} French permalinks preserved, 3 locales.`
+    ? `\nAll checks passed — ${htmlFiles.length} pages, ${frUrls.length} French permalinks moved to /fr/, 3 locales.`
     : `\n${failures} check(s) failed.`,
 );
 process.exit(failures === 0 ? 0 : 1);

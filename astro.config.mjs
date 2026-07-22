@@ -9,20 +9,24 @@ export default defineConfig({
   trailingSlash: 'always',
 
   /**
-   * French is the default locale and is served WITHOUT a prefix. That is not a
-   * preference: every WordPress permalink this site inherited is a French URL
-   * at the root (/2024/06/25/slug/), and verify-build.mjs fails the build if
-   * one stops resolving. English and Arabic sit behind /en/ and /ar/.
+   * Each language is served under its own prefix — /fr/, /en/, /ar/. The bare
+   * root / is a browser-language detector (src/pages/index.astro) that
+   * redirects into one of them, so `redirectToDefaultLocale` is off: Astro must
+   * not inject its own unconditional root→/fr redirect over that page. Old
+   * un-prefixed WordPress permalinks 301 to their /fr/ equivalent via .htaccess.
    */
   i18n: {
     defaultLocale: 'fr',
     locales: ['fr', 'en', 'ar'],
-    routing: { prefixDefaultLocale: false },
+    routing: { prefixDefaultLocale: true, redirectToDefaultLocale: false },
   },
 
   integrations: [
     sitemap({
-      filter: (page) => !page.endsWith('/404'),
+      // The 404 and the root language gate are both excluded: the gate is a
+      // noindex redirector, and the three language homes carry the hreflang.
+      // `page` is the absolute URL, so the gate is exactly `${SITE.url}/`.
+      filter: (page) => !page.endsWith('/404') && page !== `${SITE.url}/`,
       // Emits <xhtml:link rel="alternate" hreflang> for all three languages.
       i18n: {
         defaultLocale: 'fr',

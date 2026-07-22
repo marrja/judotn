@@ -13,4 +13,4 @@ formation organisés par la Fédération.
 > et la description des activités fédérales.
 
 Les annonces de compétitions sont publiées au fil de l'eau dans les
-[Actualités](/actualites/).
+[Actualités](/fr/actualites/).

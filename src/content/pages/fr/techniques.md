@@ -15,4 +15,4 @@ Le judo s'articule autour du nage-waza (techniques de projection) et du katame-w
 ## Passages de grades
 
 Les conditions et modalités des passages de grades sont fixées par le
-[règlement des passages de grades](/documents/), disponible en téléchargement.
+[règlement des passages de grades](/fr/documents/), disponible en téléchargement.

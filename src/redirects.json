@@ -1,31 +1,31 @@
 {
-  "$comment": "Old WordPress URLs worth preserving. Single source of truth: scripts/gen-redirects.mjs writes public/.htaccess from this file on every build. A trailing '*' is a wildcard whose capture is substituted into the target's '*'. AATUJA URLs are deliberately absent -- that content was deleted, so those paths return the 404 page.",
+  "$comment": "Hand-maintained old-WordPress redirects. gen-redirects.mjs writes public/.htaccess from this file PLUS an auto-generated block that 301s every un-prefixed French path to its /fr/ equivalent (the site moved from French-at-root to /fr/, /en/, /ar/). Targets here already point at /fr/ so no redirect chains form. A trailing '*' is a wildcard whose capture fills the target's '*'. AATUJA URLs are deliberately absent -- that content was deleted, so those paths return the 404 page.",
   "redirects": [
     {
       "from": "/elementor-314/",
       "to": "/",
-      "why": "internal slug of the old front page"
+      "why": "internal slug of the old front page; / is now the language gate"
     },
     {
       "from": "/category/news/",
-      "to": "/actualites/",
-      "why": "WordPress category archive"
+      "to": "/fr/actualites/",
+      "why": "WordPress category archive (French content)"
     },
     {
       "from": "/category/announcements/",
-      "to": "/actualites/",
-      "why": "WordPress category archive"
+      "to": "/fr/actualites/",
+      "why": "WordPress category archive (French content)"
     },
     {
       "from": "/category/documents/",
-      "to": "/documents/",
-      "why": "WordPress category archive"
+      "to": "/fr/documents/",
+      "why": "WordPress category archive (French content)"
     },
-    { "from": "/feed/", "to": "/rss.xml", "why": "WordPress default feed URL" },
+    { "from": "/feed/", "to": "/fr/rss.xml", "why": "WordPress default feed URL" },
     {
       "from": "/wp-content/uploads/2024/06/*.pdf",
       "to": "/documents/*.pdf",
-      "why": "the 10 official PDFs kept their filenames, so old direct links still resolve"
+      "why": "the 10 official PDFs kept their filenames and their /documents/ path, so old direct links still resolve"
     }
   ]
 }
