@@ -1,0 +1,109 @@
+{
+  "posts": [
+    {
+      "title": "Cérémonie à l'honneur de Mr. Pascal LIVOLSI",
+      "url": "/2023/06/20/ceremonie-a-lhonneur-de-mr-pascal-livolsi/",
+      "cover": "Kendo-x-Pascal-Livolsi-x-AATUJA-jpg.webp",
+      "cat": "news"
+    },
+    {
+      "title": "Accueil de l'entraîneur japonais Izuru Tschiya 7e Dan Kendo pour participer à l'encadrement du Kendo Tunisien pendant 2 ans",
+      "url": "/2023/10/16/accueil-de-lentraineur-japonais-izuru-tschiya-7e-dan-kendo-pour-participer-a-lencadrement-du-kendo-tunisien-pendant-2-ans/",
+      "cover": "Accueil-de-lentraineur-japonais-Izuru-Tschiya-7e-Dan-Kendo-pour-participer-a-lencadrement-du-Kendo-Tunisien-pendant-2-ans-e1719350139800.jpg",
+      "cat": "news"
+    },
+    {
+      "title": "Officiellement notre championne du monde junior Sarra Mzoughi Qualifiée pour les Jeux olympiques Paris 2024",
+      "url": "/2024/03/30/officiellement-notre-championne-du-monde-junior-sarra-mzoughi-qualifiee-pour-les-jeux-olympiques-paris-2024/",
+      "cover": "Officiellement-notre-championne-du-monde-junior-Sarra-Mzoughi-Qualifie-pour-les-Jeux-olympique-paris-2024-e1719349007347.jpg",
+      "cat": "news"
+    },
+    {
+      "title": "La Tunisie à la deuxième place par équipes au championnat africain senior hommes et femmes en Égypte !",
+      "url": "/2023/12/03/la-tunisie-a-la-deuxieme-place-par-equipes-au-championnat-africain-senior-hommes-et-femmes-en-egypte/",
+      "cover": "La-Tunisie-a-la-deuxieme-place-par-equipes-au-championnat-africain-senior-hommes-et-femmes-en-Egypte--e1719349333704.jpg",
+      "cat": "news"
+    },
+    {
+      "title": "Accueil de l'entraîneur japonais Taiga Moro pour participer à l'encadrement des sessions d'entraînement des équipes nationales pendant 6 mois",
+      "url": "/2023/10/16/accueil-de-lentraineur-japonais-taiga-moro-pour-participer-a-lencadrement-des-sessions-dentrainement-des-equipes-nationales-pendant-6-mois/",
+      "cover": "429824374_935399164694682_6479634298016855123_n-e1719349612122.jpg",
+      "cat": "news"
+    },
+    {
+      "title": "Programme du championnat national Seniors H / F",
+      "url": "/2024/06/25/programme-du-championnat-national-seniors-h-f/",
+      "cover": "449030804_997787328455865_5563525352017523816_n.jpg",
+      "cat": "announcements"
+    },
+    {
+      "title": "Communiqué 202/000521",
+      "url": "/2024/06/25/communique-202-000521/",
+      "cover": "448509440_994724225428842_5786335329354822840_n.jpg",
+      "cat": "announcements"
+    }
+  ],
+  "documents": [
+    {
+      "title": "Statut FTJUDO",
+      "url": "/2024/06/25/statut-ftjudo/",
+      "pdf": "/documents/Statut-FTJ.pdf",
+      "bytes": 583174
+    },
+    {
+      "title": "Code Sportif et d'organisation",
+      "url": "/2024/06/25/code-sportif-et-dorganisation/",
+      "pdf": "/documents/CodeSportif2020Final.pdf",
+      "bytes": 2400136
+    },
+    {
+      "title": "Statuts des Ligues",
+      "url": "/2024/06/25/statuts-des-ligues/",
+      "pdf": "/documents/STATUTS-LIGUES.pdf",
+      "bytes": 464478
+    },
+    {
+      "title": "Règles de Discipline",
+      "url": "/2024/06/25/regles-de-discipline/",
+      "pdf": "/documents/REGLE-DISCIPLINE.pdf",
+      "bytes": 313726
+    },
+    {
+      "title": "Cahier des charges des tournois",
+      "url": "/2024/06/25/cahier-des-charges-des-tournois/",
+      "pdf": "/documents/CAHIER_DES_CHARGES_DES_TOURNOIS.pdf",
+      "bytes": 919653
+    },
+    {
+      "title": "Reglement interieur de la commission nationale d’arbitrage de la FTJ",
+      "url": "/2024/06/25/reglement-interieur-de-la-commission-nationale-darbitrage-de-la-ftj/",
+      "pdf": "/documents/REGLE-cnARBITRAGE.pdf",
+      "bytes": 283792
+    },
+    {
+      "title": "Règles d’arbitrage de la FIJ",
+      "url": "/2024/06/25/regles-darbitrage-de-la-fij/",
+      "pdf": "/documents/reglement-arbitrage-IJF-aout-2020.pdf",
+      "bytes": 10374446
+    },
+    {
+      "title": "Reglement des passages de grades",
+      "url": "/2024/06/25/reglement-des-passages-de-grades/",
+      "pdf": "/documents/reglement-grades.pdf",
+      "bytes": 1342539
+    },
+    {
+      "title": "Aikido",
+      "url": "/2024/06/25/aikido/",
+      "pdf": "/documents/Aikido.pdf",
+      "bytes": 294536
+    },
+    {
+      "title": "Kendo",
+      "url": "/2024/06/25/kendo/",
+      "pdf": "/documents/kendo.pdf",
+      "bytes": 526079
+    }
+  ],
+  "missing": []
+}
