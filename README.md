@@ -14,14 +14,14 @@ npm install
 npm run dev        # http://localhost:4321
 ```
 
-| Command | What it does |
-| --- | --- |
-| `npm run dev` | Dev server with hot reload |
-| `npm run build` | Type-check, generate redirect files, build to `dist/` |
-| `npm run preview` | Serve the built `dist/` locally |
-| `npm test` | Verify the build (run after `npm run build`) |
-| `npm run lint` | ESLint + Prettier check |
-| `npm run format` | Rewrite files with Prettier |
+| Command           | What it does                                          |
+| ----------------- | ----------------------------------------------------- |
+| `npm run dev`     | Dev server with hot reload                            |
+| `npm run build`   | Type-check, generate redirect files, build to `dist/` |
+| `npm run preview` | Serve the built `dist/` locally                       |
+| `npm test`        | Verify the build (run after `npm run build`)          |
+| `npm run lint`    | ESLint + Prettier check                               |
+| `npm run format`  | Rewrite files with Prettier                           |
 
 `npm run build` and `npm run lint` must both pass before deploying.
 
@@ -133,17 +133,17 @@ scripts/
 
 ### Routes
 
-| File | Generates |
-| --- | --- |
-| `pages/index.astro` | `/` |
+| File                                      | Generates                                                    |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| `pages/index.astro`                       | `/`                                                          |
 | `pages/[year]/[month]/[day]/[slug].astro` | the 17 posts and documents, at their original WordPress URLs |
-| `pages/[page].astro` | the 5 section pages |
-| `pages/actualites/index.astro` | `/actualites/` |
-| `pages/documents/index.astro` | `/documents/` |
-| `pages/contact.astro` | `/contact/` |
-| `pages/404.astro` | `/404` |
-| `pages/rss.xml.ts` | `/rss.xml` |
-| `pages/robots.txt.ts` | `/robots.txt` |
+| `pages/[page].astro`                      | the 5 section pages                                          |
+| `pages/actualites/index.astro`            | `/actualites/`                                               |
+| `pages/documents/index.astro`             | `/documents/`                                                |
+| `pages/contact.astro`                     | `/contact/`                                                  |
+| `pages/404.astro`                         | `/404`                                                       |
+| `pages/rss.xml.ts`                        | `/rss.xml`                                                   |
+| `pages/robots.txt.ts`                     | `/robots.txt`                                                |
 
 `sitemap-index.xml` comes from `@astrojs/sitemap`.
 
@@ -157,8 +157,8 @@ Components reference tokens (`var(--accent-text)`), never literal values, so
 retheming the site means editing one block.
 
 ```css
---bg: #0e0e10;          /* page ground */
---accent: #e0243f;      /* fills and large display type */
+--bg: #0e0e10; /* page ground */
+--accent: #e0243f; /* fills and large display type */
 --accent-text: #ff3b52; /* links and body-size text — clears WCAG AA on --bg */
 ```
 

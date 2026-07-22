@@ -82,16 +82,18 @@ const description = doc
             <p class="hint">
               Le document s'ouvre dans le lecteur PDF de votre navigateur ou de votre appareil.
             </p>
-            <object
-              data={doc.data.pdf}
-              type="application/pdf"
-              aria-label={`Aperçu de ${doc.data.title}`}
-            >
-              <p>
-                Votre navigateur ne peut pas afficher ce PDF.
-                <a href={doc.data.pdf}>Téléchargez-le</a>.
-              </p>
-            </object>
+
+            {/*
+              The preview loads on demand. Embedding the <object> directly would
+              pull the whole PDF on every page view -- up to 10 Mo for the FIJ
+              refereeing rules -- which is the entire page weight on mobile data.
+            */}
+            <div class="preview" data-pdf={doc.data.pdf} data-label={doc.data.title}>
+              <button type="button">
+                Afficher l'aperçu
+                <span>{formatBytes(doc.data.pdfBytes)}</span>
+              </button>
+            </div>
           </div>
         )
       }
@@ -108,6 +110,23 @@ const description = doc
     </div>
   </article>
 </BaseLayout>
+
+<script>
+  // Swap the button for the real embed only when asked for.
+  const box = document.querySelector<HTMLElement>('.preview');
+  box?.querySelector('button')?.addEventListener('click', () => {
+    const url = box.dataset.pdf;
+    if (!url) return;
+    const obj = document.createElement('object');
+    obj.data = url;
+    obj.type = 'application/pdf';
+    obj.setAttribute('aria-label', `Aperçu de ${box.dataset.label ?? 'document'}`);
+    const fallback = document.createElement('p');
+    fallback.innerHTML = `Votre navigateur ne peut pas afficher ce PDF. <a href="${url}">Téléchargez-le</a>.`;
+    obj.append(fallback);
+    box.replaceChildren(obj);
+  });
+</script>
 
 <style>
   .container {
@@ -186,11 +205,38 @@ const description = doc
     color: var(--mute);
     margin-top: var(--sp-3);
   }
-  object {
+  .preview {
+    margin-top: var(--sp-5);
+  }
+  .preview button {
+    font: inherit;
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+    padding: 0.8rem 1.4rem;
+    background: transparent;
+    border: 1.5px solid var(--line-strong);
+    color: inherit;
+    font-weight: 800;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .preview button:hover {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+  .preview button span {
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--mute);
+  }
+  .preview object {
     display: block;
     width: 100%;
     height: min(80vh, 900px);
-    margin-top: var(--sp-5);
     border: 1px solid var(--line);
     background: var(--surface);
   }

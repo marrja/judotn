@@ -59,6 +59,9 @@ const columns = [
 
 <style>
   footer {
+    /* footer sits on a darker ground than --bg, so the muted tone is
+       lifted here to keep small legal text at WCAG AA (4.58:1). */
+    --legal: #7d7975;
     border-top: 1px solid var(--line);
     background: #0a0a0c;
     padding-block: var(--sp-7) var(--sp-5);
@@ -124,7 +127,7 @@ const columns = [
     gap: var(--sp-4);
     flex-wrap: wrap;
     font-size: 0.75rem;
-    color: #5f5c58;
+    color: var(--legal);
   }
   .bottom a {
     color: inherit;
