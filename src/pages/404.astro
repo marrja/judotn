@@ -1,0 +1,92 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { primaryNav } from '../navigation';
+---
+
+<BaseLayout
+  title="Page introuvable"
+  description="La page demandée n'existe pas ou a été déplacée."
+  noindex
+>
+  <section class="section wrap">
+    <div class="container">
+      <p class="eyebrow">Erreur 404</p>
+      <h1>Page introuvable</h1>
+      <p class="lede">Cette page n'existe pas ou a été déplacée lors de la refonte du site.</p>
+      <nav aria-label="Sections principales">
+        <ul>
+          {
+            primaryNav.map((i) => (
+              <li>
+                <a href={i.href}>{i.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <a class="home" href="/">Retour à l'accueil</a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .wrap {
+    padding-block: clamp(4rem, 12vw, 8rem);
+    position: relative;
+    overflow: hidden;
+  }
+  .wrap::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 90% at 75% 20%, #e0243f24, transparent 70%);
+  }
+  .container {
+    position: relative;
+  }
+  h1 {
+    font-size: var(--step-4);
+    text-transform: uppercase;
+    letter-spacing: -0.04em;
+    margin-block: var(--sp-4) var(--sp-5);
+  }
+  .lede {
+    color: var(--mute);
+    font-size: var(--step-1);
+    font-family: var(--font-serif);
+  }
+  ul {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin-block: var(--sp-6);
+  }
+  ul a {
+    display: block;
+    border: 1px solid var(--line-strong);
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  ul a:hover {
+    border-color: var(--accent-text);
+    color: var(--accent-text);
+  }
+  .home {
+    display: inline-block;
+    background: var(--fg);
+    color: var(--bg);
+    padding: 0.95rem 1.7rem;
+    font-weight: 800;
+    font-size: 0.83rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .home:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+</style>

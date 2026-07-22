@@ -1,0 +1,278 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import DocumentList from '../components/DocumentList.astro';
+import { codeMoral } from '../navigation';
+import { SITE } from '../site.js';
+
+const byDate = (a: { data: { date: Date } }, b: { data: { date: Date } }) =>
+  b.data.date.getTime() - a.data.date.getTime();
+
+const posts = (await getCollection('posts')).sort(byDate);
+const documents = (await getCollection('documents')).sort(byDate);
+
+const [lead, second, ...rest] = posts;
+---
+
+<BaseLayout title={SITE.title} description={SITE.description}>
+  <section class="hero">
+    <span class="belt" aria-hidden="true"></span>
+    <span class="belt b2" aria-hidden="true"></span>
+    <div class="container">
+      <p class="eyebrow kick">Fédération Tunisienne de Judo</p>
+      <h1>Le Judo<span>L'école de la vie</span></h1>
+      <p class="lede">Huit valeurs. Une discipline. Une fédération au service du judo tunisien.</p>
+      <div class="btns">
+        <a
+          class="b1"
+          href="https://www.tunisie-judo.org/licence.html"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Gestion des licences
+        </a>
+        <a class="b2" href="/la-federation/">La Fédération</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="code">
+    <div class="container">
+      <h2 class="lbl">Le code moral du judo</h2>
+      <ol>
+        {
+          codeMoral.map((v, i) => (
+            <li>
+              <span class="num">{String(i + 1).padStart(2, '0')}</span>
+              <span class="v">{v}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="head">
+        <h2>Actualités</h2>
+        <span class="ct">{String(posts.length).padStart(2, '0')}</span>
+        <a href="/actualites/">Tout voir</a>
+      </div>
+      {
+        lead && (
+          <div class="feat">
+            <PostCard post={lead} featured />
+            {second && <PostCard post={second} />}
+          </div>
+        )
+      }
+      {
+        rest.length > 0 && (
+          <div class="grid3">
+            {rest.slice(0, 3).map((p) => (
+              <PostCard post={p} />
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="head">
+        <h2>Documents</h2>
+        <span class="ct">{String(documents.length).padStart(2, '0')}</span>
+        <a href="/documents/">Tout voir</a>
+      </div>
+      <DocumentList documents={documents.slice(0, 6)} />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 90% at 78% 10%, #e0243f2e, transparent 70%),
+      radial-gradient(ellipse 60% 70% at 8% 95%, #e0243f14, transparent 70%);
+  }
+  .belt {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 62%;
+    height: clamp(30px, 5vw, 54px);
+    background: var(--accent);
+    transform: rotate(-3.5deg) scaleX(1.15);
+    opacity: 0.14;
+  }
+  .belt.b2 {
+    top: calc(62% + clamp(38px, 6vw, 66px));
+    opacity: 0.07;
+  }
+  .hero .container {
+    position: relative;
+    z-index: 1;
+    padding-block: clamp(3.4rem, 9vw, 6.6rem);
+  }
+  .kick {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-5);
+  }
+  .kick::before {
+    content: '';
+    width: 34px;
+    height: 2px;
+    background: var(--accent-text);
+  }
+  h1 {
+    font-size: var(--step-5);
+    line-height: 0.85;
+    letter-spacing: -0.045em;
+    text-transform: uppercase;
+  }
+  h1 span {
+    display: block;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--accent-text);
+  }
+  .lede {
+    font-family: var(--font-serif);
+    font-size: var(--step-1);
+    color: var(--mute);
+    max-width: 40ch;
+    margin-top: var(--sp-5);
+    line-height: 1.5;
+  }
+  .btns {
+    display: flex;
+    gap: var(--sp-3);
+    flex-wrap: wrap;
+    margin-top: var(--sp-6);
+  }
+  .b1,
+  .b2 {
+    padding: 0.95rem 1.7rem;
+    font-weight: 800;
+    font-size: 0.83rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .b1 {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .b1:hover {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .b2 {
+    border: 1.5px solid var(--line-strong);
+  }
+  .b2:hover {
+    border-color: var(--fg);
+  }
+
+  .code {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .code .container {
+    padding-block: var(--sp-6);
+  }
+  .lbl {
+    font-size: var(--step--1);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-weight: 800;
+    opacity: 0.75;
+    margin-bottom: var(--sp-5);
+  }
+  .code ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0 var(--sp-6);
+    list-style: none;
+  }
+  .code li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+    padding: var(--sp-2) 0;
+    border-bottom: 1px solid #ffffff26;
+  }
+  .num {
+    font-size: 0.68rem;
+    font-weight: 800;
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+  }
+  .v {
+    font-size: var(--step-0);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-5);
+    margin-bottom: var(--sp-6);
+  }
+  .head h2 {
+    font-size: var(--step-3);
+    text-transform: uppercase;
+    letter-spacing: -0.035em;
+  }
+  .ct {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--accent-text);
+    letter-spacing: 0.1em;
+    font-variant-numeric: tabular-nums;
+  }
+  .head a {
+    margin-left: auto;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .head a:hover {
+    color: var(--fg);
+  }
+
+  .feat {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: var(--sp-5);
+    margin-bottom: var(--sp-5);
+  }
+  .grid3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+    gap: var(--sp-5);
+  }
+
+  @media (max-width: 900px) {
+    .feat {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

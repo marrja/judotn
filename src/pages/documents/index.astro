@@ -1,0 +1,27 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import DocumentList from '../../components/DocumentList.astro';
+
+const documents = (await getCollection('documents')).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime(),
+);
+---
+
+<BaseLayout
+  title="Documents"
+  description="Statuts, code sportif, règlements d'arbitrage et de discipline : les textes officiels de la Fédération Tunisienne de Judo, en téléchargement libre."
+>
+  <PageHeader
+    title="Documents"
+    intro="Statuts, code sportif et règlements de la Fédération Tunisienne de Judo. Tous les textes sont téléchargeables au format PDF."
+    crumbs={[{ label: 'Accueil', href: '/' }]}
+  />
+
+  <section class="section">
+    <div class="container">
+      <DocumentList documents={documents} />
+    </div>
+  </section>
+</BaseLayout>
