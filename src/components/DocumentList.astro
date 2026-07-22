@@ -1,0 +1,91 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatBytes } from '../lib/format';
+
+interface Props {
+  documents: CollectionEntry<'documents'>[];
+  /** Link to the document's own page (default) or straight to the PDF. */
+  target?: 'page' | 'pdf';
+}
+const { documents, target = 'page' } = Astro.props;
+---
+
+<ul class="docs">
+  {
+    documents.map((doc, i) => (
+      <li>
+        <a
+          href={target === 'pdf' ? doc.data.pdf : doc.data.legacyUrl}
+          download={target === 'pdf' ? '' : undefined}
+        >
+          <span class="n">{String(i + 1).padStart(2, '0')}</span>
+          <span class="t">{doc.data.title}</span>
+          <span class="m">
+            PDF · {formatBytes(doc.data.pdfBytes)}
+            <span aria-hidden="true">→</span>
+          </span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .docs {
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+  li {
+    border-bottom: 1px solid var(--line);
+  }
+  a {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    padding: var(--sp-4) var(--sp-2);
+    text-decoration: none;
+    transition:
+      background 0.16s,
+      padding-left 0.16s;
+  }
+  a:hover {
+    background: var(--surface);
+    padding-left: var(--sp-4);
+  }
+  .n {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--accent-text);
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .t {
+    font-weight: 700;
+    font-size: var(--step-0);
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+  .m {
+    margin-left: auto;
+    font-size: 0.71rem;
+    color: var(--mute);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    flex: none;
+    white-space: nowrap;
+  }
+  a:hover .m {
+    color: var(--accent-text);
+  }
+
+  @media (max-width: 620px) {
+    a {
+      flex-wrap: wrap;
+      gap: var(--sp-2) var(--sp-4);
+    }
+    .m {
+      margin-left: calc(0.72rem + var(--sp-5));
+      width: 100%;
+    }
+  }
+</style>

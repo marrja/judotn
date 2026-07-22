@@ -1,0 +1,146 @@
+---
+import { primaryNav, usefulLinks, olympicLinks } from '../navigation';
+import { SITE } from '../site.js';
+
+const federation = primaryNav.filter((i) => !['/documents/', '/actualites/'].includes(i.href));
+const year = new Date().getFullYear();
+
+const columns = [
+  { title: 'La Fédération', items: federation },
+  { title: 'Liens utiles', items: usefulLinks },
+  { title: "L'Olympisme", items: olympicLinks },
+];
+---
+
+<footer>
+  <div class="container">
+    <div class="grid">
+      <div>
+        <div class="brand">
+          <img src="/logo-judo-dark.png" alt="" width="46" height="45" />
+          <b>Fédération Tunisienne<br />de Judo</b>
+        </div>
+        <p>
+          La Fédération Tunisienne de Judo encadre la pratique du judo et des disciplines associées
+          sur l'ensemble du territoire tunisien.
+        </p>
+        <a class="feed" href="/rss.xml">Flux RSS</a>
+      </div>
+
+      {
+        columns.map((col) => (
+          <nav aria-label={col.title}>
+            <h2>{col.title}</h2>
+            <ul>
+              {col.items.map((i) => (
+                <li>
+                  <a
+                    href={i.href}
+                    rel={i.external ? 'noopener noreferrer' : undefined}
+                    target={i.external ? '_blank' : undefined}
+                  >
+                    {i.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))
+      }
+    </div>
+
+    <div class="bottom">
+      <span>© {year} {SITE.title}</span>
+      <a href="/contact/">Contact</a>
+      <span>judo.tn</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  footer {
+    border-top: 1px solid var(--line);
+    background: #0a0a0c;
+    padding-block: var(--sp-7) var(--sp-5);
+    margin-top: var(--sp-8);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, 1fr);
+    gap: var(--sp-6);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    margin-bottom: var(--sp-4);
+  }
+  .brand b {
+    font-size: 0.95rem;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  p {
+    font-size: 0.86rem;
+    color: var(--mute);
+    max-width: 34ch;
+  }
+  h2 {
+    font-size: 0.68rem;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin: 0 0 var(--sp-4);
+    font-weight: 800;
+  }
+  ul {
+    list-style: none;
+  }
+  li {
+    margin-bottom: var(--sp-2);
+  }
+  li a,
+  .feed {
+    font-size: 0.84rem;
+    color: var(--mute);
+    text-decoration: none;
+  }
+  li a:hover,
+  .feed:hover {
+    color: var(--fg);
+  }
+  .feed {
+    display: inline-block;
+    margin-top: var(--sp-3);
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 2px;
+  }
+  .bottom {
+    margin-top: var(--sp-7);
+    padding-top: var(--sp-4);
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: var(--sp-4);
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    color: #5f5c58;
+  }
+  .bottom a {
+    color: inherit;
+  }
+  .bottom a:hover {
+    color: var(--fg);
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 560px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

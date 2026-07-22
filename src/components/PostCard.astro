@@ -1,0 +1,100 @@
+---
+import { Image } from 'astro:assets';
+import type { CollectionEntry } from 'astro:content';
+import { formatDate } from '../lib/format';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+  /** The lead card renders larger and eagerly loads its image. */
+  featured?: boolean;
+}
+const { post, featured = false } = Astro.props;
+const { title, date, cover, coverAlt, category, legacyUrl } = post.data;
+const label = category === 'annonces' ? 'Annonce' : 'Actualité';
+---
+
+<article class:list={['card', { featured }]}>
+  <a href={legacyUrl}>
+    {
+      cover ? (
+        <Image
+          src={cover}
+          alt={coverAlt}
+          widths={featured ? [480, 800, 1200] : [320, 480, 800]}
+          sizes={featured ? '(max-width: 900px) 100vw, 58vw' : '(max-width: 900px) 100vw, 30vw'}
+          loading={featured ? 'eager' : 'lazy'}
+          class="cover"
+        />
+      ) : (
+        <div class="cover placeholder" aria-hidden="true" />
+      )
+    }
+    <div class="body">
+      <span class="tag">{label}</span>
+      <h3>{title}</h3>
+      <time datetime={date.toISOString()}>{formatDate(date)}</time>
+    </div>
+  </a>
+</article>
+
+<style>
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    transition:
+      border-color 0.2s,
+      transform 0.2s;
+  }
+  .card:hover {
+    border-color: var(--line-strong);
+    transform: translateY(-3px);
+  }
+  a {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  .cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+  .placeholder {
+    background:
+      radial-gradient(circle at 62% 38%, #e0243f4d, transparent 62%),
+      repeating-linear-gradient(48deg, #1c1c22, #1c1c22 10px, #212129 10px, #212129 20px);
+  }
+  .body {
+    padding: var(--sp-4) var(--sp-4) var(--sp-5);
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--accent-text);
+    padding: 0.26rem 0.6rem;
+    margin-bottom: var(--sp-3);
+  }
+  h3 {
+    font-size: var(--step-1);
+    font-weight: 700;
+    line-height: 1.26;
+  }
+  .featured h3 {
+    font-size: var(--step-2);
+  }
+  .featured .cover {
+    aspect-ratio: 16 / 10;
+  }
+  time {
+    display: block;
+    font-size: 0.73rem;
+    color: var(--mute);
+    margin-top: var(--sp-3);
+    font-weight: 600;
+  }
+</style>

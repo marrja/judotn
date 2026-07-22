@@ -1,0 +1,294 @@
+---
+import { primaryNav, utilityNav } from '../navigation';
+import { SITE } from '../site.js';
+
+const path = Astro.url.pathname;
+const isCurrent = (href: string) => path === href || (href !== '/' && path.startsWith(href));
+---
+
+<div class="utility">
+  <div class="container row">
+    <span>{SITE.description.split(':')[0]}</span>
+    <nav aria-label="Navigation secondaire">
+      <ul>
+        {
+          utilityNav.map((i) => (
+            <li>
+              <a href={i.href}>{i.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<header>
+  <div class="container bar">
+    <a class="brand" href="/">
+      <img src="/logo-judo-dark.png" alt="" width="46" height="45" />
+      <span>
+        <b>Fédération Tunisienne de Judo</b>
+        <i>{SITE.shortTitle}</i>
+      </span>
+    </a>
+
+    <nav id="primary-nav" aria-label="Navigation principale">
+      <ul>
+        {
+          primaryNav.map((item) => (
+            <li class={item.children ? 'has-sub' : ''}>
+              <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+                {item.label}
+              </a>
+              {item.children && (
+                <ul class="sub">
+                  {item.children.map((c) => (
+                    <li>
+                      <a
+                        href={c.href}
+                        rel={c.external ? 'noopener noreferrer' : undefined}
+                        target={c.external ? '_blank' : undefined}
+                      >
+                        {c.label}
+                        {c.external && <span aria-label="(site externe)">↗</span>}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <button type="button" id="nav-toggle" aria-expanded="false" aria-controls="primary-nav">
+      <span class="sr">Menu</span>
+      <i aria-hidden="true"></i>
+    </button>
+  </div>
+</header>
+
+<script>
+  const btn = document.getElementById('nav-toggle');
+  const nav = document.getElementById('primary-nav');
+  btn?.addEventListener('click', () => {
+    const open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', String(!open));
+    nav?.classList.toggle('open', !open);
+  });
+</script>
+
+<style>
+  .utility {
+    border-bottom: 1px solid var(--line);
+    font-size: var(--step--1);
+    color: var(--mute);
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    min-height: 40px;
+    flex-wrap: wrap;
+  }
+  .utility ul {
+    display: flex;
+    gap: var(--sp-5);
+    list-style: none;
+  }
+  .utility nav {
+    margin-left: auto;
+  }
+  .utility a {
+    text-decoration: none;
+  }
+  .utility a:hover {
+    color: var(--fg);
+  }
+
+  header {
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    padding-block: var(--sp-3);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+    text-decoration: none;
+  }
+  .brand b {
+    display: block;
+    font-size: 0.98rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .brand i {
+    display: block;
+    font-style: normal;
+    font-size: 0.63rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: var(--accent-text);
+  }
+
+  nav[aria-label='Navigation principale'] {
+    margin-left: auto;
+  }
+  nav[aria-label='Navigation principale'] > ul {
+    display: flex;
+    gap: 0.1rem;
+    list-style: none;
+  }
+  nav[aria-label='Navigation principale'] a {
+    display: block;
+    font-size: 0.79rem;
+    font-weight: 700;
+    padding: var(--sp-3);
+    text-decoration: none;
+    position: relative;
+    white-space: nowrap;
+  }
+  nav[aria-label='Navigation principale'] > ul > li > a::after {
+    content: '';
+    position: absolute;
+    left: var(--sp-3);
+    right: var(--sp-3);
+    bottom: 0.4rem;
+    height: 2px;
+    background: var(--accent-text);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.22s;
+  }
+  nav[aria-label='Navigation principale'] > ul > li > a:hover::after,
+  nav[aria-label='Navigation principale'] a[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+
+  .sub {
+    position: absolute;
+    list-style: none;
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    min-width: 240px;
+    padding: var(--sp-2) 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: 0.18s;
+    z-index: 20;
+  }
+  .has-sub:hover .sub,
+  .has-sub:focus-within .sub {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+  .sub a {
+    font-weight: 600;
+    padding-inline: var(--sp-4);
+    white-space: normal;
+  }
+  .sub a:hover {
+    color: var(--accent-text);
+  }
+  .sub span {
+    font-size: 0.7em;
+    opacity: 0.6;
+    margin-left: 0.3em;
+  }
+
+  #nav-toggle {
+    display: none;
+    margin-left: auto;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: inherit;
+    cursor: pointer;
+  }
+  #nav-toggle i,
+  #nav-toggle i::before,
+  #nav-toggle i::after {
+    display: block;
+    width: 18px;
+    height: 1.5px;
+    background: currentColor;
+    position: relative;
+  }
+  #nav-toggle i::before,
+  #nav-toggle i::after {
+    content: '';
+    position: absolute;
+    left: 0;
+  }
+  #nav-toggle i::before {
+    top: -5px;
+  }
+  #nav-toggle i::after {
+    top: 5px;
+  }
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  @media (max-width: 1080px) {
+    .utility nav {
+      display: none;
+    }
+    #nav-toggle {
+      display: grid;
+    }
+    nav[aria-label='Navigation principale'] {
+      display: none;
+      width: 100%;
+      order: 3;
+    }
+    nav[aria-label='Navigation principale'].open {
+      display: block;
+      padding-bottom: var(--sp-4);
+    }
+    nav[aria-label='Navigation principale'] > ul {
+      flex-direction: column;
+      gap: 0;
+    }
+    nav[aria-label='Navigation principale'] > ul > li {
+      border-top: 1px solid var(--line);
+    }
+    nav[aria-label='Navigation principale'] a {
+      padding: var(--sp-3) 0;
+      font-size: 0.95rem;
+    }
+    .sub {
+      position: static;
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+      border: 0;
+      background: transparent;
+      padding: 0 0 var(--sp-3) var(--sp-4);
+      min-width: 0;
+    }
+    .sub a {
+      padding-inline: 0;
+      font-size: 0.85rem;
+      color: var(--mute);
+    }
+  }
+</style>

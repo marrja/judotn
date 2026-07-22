@@ -1,0 +1,78 @@
+---
+interface Props {
+  title: string;
+  intro?: string;
+  /** Breadcrumb trail, excluding the current page. */
+  crumbs?: { label: string; href: string }[];
+}
+const { title, intro, crumbs = [] } = Astro.props;
+---
+
+<div class="page-header">
+  <div class="container">
+    {
+      crumbs.length > 0 && (
+        <nav class="crumbs" aria-label="Fil d'Ariane">
+          <ol>
+            {crumbs.map((c) => (
+              <li>
+                <a href={c.href}>{c.label}</a>
+              </li>
+            ))}
+            <li aria-current="page">{title}</li>
+          </ol>
+        </nav>
+      )
+    }
+    <h1>{title}</h1>
+    {intro && <p class="intro">{intro}</p>}
+  </div>
+</div>
+
+<style>
+  .page-header {
+    border-bottom: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 100% at 85% 50%, #e0243f24, transparent 70%);
+  }
+  .container {
+    position: relative;
+    padding-block: clamp(2.4rem, 6vw, 4rem);
+  }
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    list-style: none;
+    font-size: var(--step--1);
+    color: var(--mute);
+    margin-bottom: var(--sp-4);
+  }
+  .crumbs li + li::before {
+    content: '/';
+    margin-right: var(--sp-2);
+    color: var(--line-strong);
+  }
+  .crumbs a {
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--accent-text);
+  }
+  h1 {
+    font-size: var(--step-4);
+    text-transform: uppercase;
+    letter-spacing: -0.04em;
+  }
+  .intro {
+    color: var(--mute);
+    margin-top: var(--sp-4);
+    max-width: 56ch;
+  }
+</style>
