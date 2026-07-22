@@ -27,43 +27,78 @@ npm run dev        # http://localhost:4321
 
 ---
 
+## Languages (FR / EN / AR)
+
+The site is trilingual: **French** (the default, served at the root),
+**English** under `/en/`, and **Arabic** under `/ar/` (right-to-left).
+
+French stays unprefixed on purpose — every URL inherited from WordPress is a
+French permalink at the root, and `npm test` fails if one moves. English and
+Arabic are the same paths behind an `/en/` or `/ar/` prefix.
+
+Two rules make the whole thing work:
+
+- **Content is split one folder per language:** `src/content/posts/fr/`,
+  `…/en/`, `…/ar/`, and the same for `documents/` and `pages/`.
+- **The filename is the translation link.** The three files that share a name —
+  `posts/fr/x.md`, `posts/en/x.md`, `posts/ar/x.md` — are the same item in three
+  languages, and that is what wires up the language switcher. So **an item must
+  exist in all three languages with the same filename.** `npm test` fails if a
+  translation is missing.
+
+Interface text (menus, buttons, labels, dates) is **not** in the Markdown — it
+lives in [`src/i18n/ui.ts`](src/i18n/ui.ts), one entry per language. French is
+the source of truth there: if you add a key and forget its English or Arabic
+value, `npm run build` fails to compile.
+
+---
+
 ## Editing content
 
 **All content is Markdown.** You do not need to touch any code to add or change
-a news item, an announcement, or a document.
+a news item, an announcement, or a document — but remember you are adding it in
+**three languages**.
 
 ### Add a news item or announcement
 
-Create a file in `src/content/posts/`, named after the URL slug you want:
+Create the file **three times**, once in each of `src/content/posts/fr/`,
+`src/content/posts/en/` and `src/content/posts/ar/`, using the **same filename**
+each time (name it after the French URL slug):
 
 ```markdown
 ---
 title: 'Titre de l’actualité'
 date: 2026-07-22T10:00:00Z
 category: 'actualites' # or 'annonces'
-cover: '../../assets/posts/ma-photo.jpg' # optional
+cover: '../../../assets/posts/ma-photo.jpg' # optional
 coverAlt: 'Description de la photo pour les lecteurs d’écran'
 tags: ['Judo'] # optional
-legacySlug: 'titre-de-lactualite'
-legacyUrl: '/2026/07/22/titre-de-lactualite/'
+url: '/2026/07/22/titre-de-lactualite/'
 ---
 
 Le corps de l’article, en Markdown. Il peut être vide.
 ```
 
-Put the image in `src/assets/posts/` first. Astro converts it to WebP and
-generates the responsive sizes automatically — use the original, don't resize it
-yourself.
+Only `title`, `coverAlt`, `tags` and the body change between languages — `date`,
+`cover` and **`url` stay identical in all three files** (the `/en/` and `/ar/`
+prefixes are added automatically). The Arabic file is written in Arabic, and the
+page turns right-to-left on its own.
 
-`legacyUrl` is the page's address and **must** match the date and slug:
-`/YYYY/MM/DD/<legacySlug>/`. It is named "legacy" because it preserves the URL
-scheme WordPress used; new posts follow the same pattern so nothing is
-inconsistent. `npm test` fails if a `legacyUrl` doesn't resolve.
+Put the image in `src/assets/posts/` first (once — it's shared). Astro converts
+it to WebP and generates the responsive sizes automatically; use the original,
+don't resize it yourself. Note the cover path is `../../../assets/…` — three
+levels up, because the file now sits one folder deeper under its language.
+
+`url` is the page's address and **must** match the date and slug:
+`/YYYY/MM/DD/<slug>/`. It preserves the scheme WordPress used; new posts follow
+the same pattern. `npm test` fails if a `url` doesn't resolve or a translation
+is missing.
 
 ### Add a document (PDF)
 
-1. Put the PDF in `public/documents/`.
-2. Create a file in `src/content/documents/`:
+1. Put the PDF in `public/documents/` (once — the PDF itself is not translated).
+2. Create the record **three times**, in `src/content/documents/{fr,en,ar}/`,
+   same filename, translating only the `title`:
 
 ```markdown
 ---
@@ -71,37 +106,42 @@ title: 'Nom du document'
 date: 2026-07-22T10:00:00Z
 pdf: '/documents/nom-du-fichier.pdf'
 pdfBytes: 1234567
-legacySlug: 'nom-du-document'
-legacyUrl: '/2026/07/22/nom-du-document/'
+url: '/2026/07/22/nom-du-document/'
 ---
 ```
 
 `pdfBytes` is the file size in bytes (`ls -l` or the file properties dialog). It
 renders as the "PDF · 1,2 Mo" label so people know what they're downloading
-before they tap it on mobile data.
+before they tap it on mobile data. The documents are French PDFs, so the English
+and Arabic pages show a "published in French only" note automatically.
 
 ### Edit a section page
 
 The five section pages — La Fédération, Direction Technique, Activités,
-Techniques, Espace Clubs — live in `src/content/pages/` as Markdown. They
-currently contain **placeholder text inside blockquotes**, because these sections
-had no content in WordPress (the menu items pointed at `#`). Replace the
-blockquote and write normally.
+Techniques, Espace Clubs — live in `src/content/pages/{fr,en,ar}/` as Markdown.
+They currently contain **placeholder text inside blockquotes**, because these
+sections had no content in WordPress (the menu items pointed at `#`). Replace the
+blockquote in each language and write normally.
 
 Set `draft: true` in the frontmatter to remove a page from the build.
 
-### Change the site title, description or contact details
+### Change interface text (menus, buttons, labels)
 
-Everything site-wide is in [`src/site.js`](src/site.js). **The contact details
-there are placeholders** — the old `/contact/` page was empty and the database
-held no address, phone or public email. Replace them and they update on
-`/contact/` and in the footer at once.
+[`src/i18n/ui.ts`](src/i18n/ui.ts) — one object per language, French first.
+Change a string there and it updates everywhere it is used, in that language.
+
+### Change the site URL or contact details
+
+Site-wide non-text values are in [`src/site.js`](src/site.js). **The contact
+details there are placeholders** — the old `/contact/` page was empty and the
+database held no address, phone or public email. Fill in a `value` and it updates
+on `/contact/` and in the footer at once, in all three languages.
 
 ### Change the navigation
 
-[`src/navigation.ts`](src/navigation.ts) — one array per menu. External links get
-`external: true`, which adds `target="_blank"`, the right `rel`, and a visual
-marker.
+[`src/navigation.ts`](src/navigation.ts) builds each menu per language, taking
+its labels from `src/i18n/ui.ts`. External links get `external: true`, which adds
+`target="_blank"`, the right `rel`, and a visual marker.
 
 ---
 
@@ -109,44 +149,53 @@ marker.
 
 ```
 src/
-  assets/posts/        images for posts (optimised at build time)
-  components/          Header, Footer, Seo, PostCard, DocumentList, PageHeader
+  assets/posts/        images for posts (optimised at build time, shared across languages)
+  components/          Header, Footer, Seo, PostCard, DocumentList, PageHeader, LanguageSwitcher
   content/
-    posts/             news + announcements  (Markdown)
-    documents/         PDF records           (Markdown)
-    pages/             section pages         (Markdown)
+    posts/{fr,en,ar}/       news + announcements  (Markdown, one folder per language)
+    documents/{fr,en,ar}/   PDF records           (Markdown)
+    pages/{fr,en,ar}/       section pages         (Markdown)
+  i18n/
+    ui.ts              every interface string, in all three languages (French is the source of truth)
+    index.ts           locale helpers: URLs, dates, file sizes
   layouts/BaseLayout.astro
-  lib/format.ts        date + file-size formatting
+  lib/content.ts       locale-aware access to the collections
   pages/               routes (see below)
-  styles/global.css    ALL design tokens live here
+  styles/global.css    ALL design tokens live here + the right-to-left rules
   content.config.ts    zod schemas for the three collections
-  navigation.ts        menus
+  navigation.ts        menus (built per language from i18n/ui.ts)
   redirects.json       old URL -> new URL map (generates public/.htaccess)
-  site.js              site title, URL, contact details
+  site.js              site URL + contact details
 public/
   .htaccess            GENERATED — Hostinger config, do not edit
   documents/           the PDFs themselves
-  fonts/               self-hosted variable fonts
+  fonts/               self-hosted variable fonts (incl. Noto Sans Arabic)
 scripts/
   gen-redirects.mjs    writes public/.htaccess from redirects.json
-  verify-build.mjs     the `npm test` suite
+  verify-build.mjs     the build-verification part of `npm test`
+  test-i18n.mjs        unit tests for the locale helpers
 ```
 
 ### Routes
 
-| File                                      | Generates                                                    |
-| ----------------------------------------- | ------------------------------------------------------------ |
-| `pages/index.astro`                       | `/`                                                          |
-| `pages/[year]/[month]/[day]/[slug].astro` | the 17 posts and documents, at their original WordPress URLs |
-| `pages/[page].astro`                      | the 5 section pages                                          |
-| `pages/actualites/index.astro`            | `/actualites/`                                               |
-| `pages/documents/index.astro`             | `/documents/`                                                |
-| `pages/contact.astro`                     | `/contact/`                                                  |
-| `pages/404.astro`                         | `/404`                                                       |
-| `pages/rss.xml.ts`                        | `/rss.xml`                                                   |
-| `pages/robots.txt.ts`                     | `/robots.txt`                                                |
+Every route lives under `pages/[...lang]/`. The leading `[...lang]` segment is
+empty for French (so the page builds at the root) and becomes `en` or `ar` for
+the other two — one source file produces all three language versions.
 
-`sitemap-index.xml` comes from `@astrojs/sitemap`.
+| File                                                | Generates (× fr / en / ar)                                               |
+| --------------------------------------------------- | ------------------------------------------------------------------------ |
+| `pages/[...lang]/index.astro`                       | `/`, `/en/`, `/ar/`                                                      |
+| `pages/[...lang]/[year]/[month]/[day]/[slug].astro` | the 18 posts and documents, at their WordPress URLs (prefixed for en/ar) |
+| `pages/[...lang]/[page].astro`                      | the 5 section pages                                                      |
+| `pages/[...lang]/actualites/index.astro`            | `/actualites/`                                                           |
+| `pages/[...lang]/documents/index.astro`             | `/documents/`                                                            |
+| `pages/[...lang]/contact.astro`                     | `/contact/`                                                              |
+| `pages/[...lang]/rss.xml.ts`                        | `/rss.xml` (one feed per language)                                       |
+| `pages/404.astro`                                   | `/404` — a single French page (Apache serves one ErrorDocument)          |
+| `pages/robots.txt.ts`                               | `/robots.txt`                                                            |
+
+`sitemap-index.xml` comes from `@astrojs/sitemap`, configured to emit `hreflang`
+alternates for all three languages.
 
 ---
 
@@ -167,8 +216,24 @@ The two accent tokens exist because the original brand crimson is not legible at
 body size on a near-black ground. Use `--accent-text` for anything you read,
 `--accent` for anything you look at.
 
-Fonts are **Manrope** and **Platypi**, both SIL OFL, both self-hosted from
-`public/fonts/` as variable fonts. No CDN, no Google Fonts, nothing to break.
+Fonts are **Manrope** and **Platypi** for Latin, and **Noto Sans Arabic** for
+Arabic — all SIL OFL, all self-hosted from `public/fonts/` as variable fonts. No
+CDN, no Google Fonts, nothing to break. The Arabic face is `unicode-range`-scoped,
+so French and English pages never download it.
+
+### Right-to-left
+
+Arabic pages render with `dir="rtl"` on `<html>`, set automatically from the URL.
+The layout follows because the CSS uses **logical properties**
+(`margin-inline-start`, `padding-inline-end`, `inset-inline-start`) rather than
+`left`/`right`, so it mirrors on its own. If you write new CSS, keep to logical
+properties and it will keep working in both directions.
+
+One thing that is **not** automatic and is easy to get wrong: the design uses
+`letter-spacing` + `text-transform: uppercase` for eyebrows, labels and buttons.
+Arabic is cursive and has no uppercase, so that treatment breaks it — there is a
+`[dir='rtl']` block at the end of `global.css` that strips it. If you add a new
+spaced-uppercase element, add its selector there too.
 
 ---
 

@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { formatBytes } from '../lib/format';
+import { formatBytes, stripLocale } from '../i18n/index.ts';
+import { entryHref } from '../lib/content.ts';
 
 interface Props {
   documents: CollectionEntry<'documents'>[];
@@ -8,6 +9,8 @@ interface Props {
   target?: 'page' | 'pdf';
 }
 const { documents, target = 'page' } = Astro.props;
+
+const { lang } = stripLocale(Astro.url.pathname);
 ---
 
 <ul class="docs">
@@ -15,14 +18,16 @@ const { documents, target = 'page' } = Astro.props;
     documents.map((doc, i) => (
       <li>
         <a
-          href={target === 'pdf' ? doc.data.pdf : doc.data.legacyUrl}
+          href={target === 'pdf' ? doc.data.pdf : entryHref(doc)}
           download={target === 'pdf' ? '' : undefined}
         >
           <span class="n">{String(i + 1).padStart(2, '0')}</span>
           <span class="t">{doc.data.title}</span>
           <span class="m">
-            PDF · {formatBytes(doc.data.pdfBytes)}
-            <span aria-hidden="true">→</span>
+            PDF · {formatBytes(lang, doc.data.pdfBytes)}
+            <span class="arrow" aria-hidden="true">
+              →
+            </span>
           </span>
         </a>
       </li>
@@ -46,11 +51,11 @@ const { documents, target = 'page' } = Astro.props;
     text-decoration: none;
     transition:
       background 0.16s,
-      padding-left 0.16s;
+      padding-inline-start 0.16s;
   }
   a:hover {
     background: var(--surface);
-    padding-left: var(--sp-4);
+    padding-inline-start: var(--sp-4);
   }
   .n {
     font-size: 0.72rem;
@@ -66,7 +71,7 @@ const { documents, target = 'page' } = Astro.props;
     line-height: 1.35;
   }
   .m {
-    margin-left: auto;
+    margin-inline-start: auto;
     font-size: 0.71rem;
     color: var(--mute);
     font-weight: 700;
@@ -77,6 +82,13 @@ const { documents, target = 'page' } = Astro.props;
   a:hover .m {
     color: var(--accent-text);
   }
+  /* The arrow points "forward", which is leftward in Arabic. */
+  .arrow {
+    display: inline-block;
+  }
+  :global([dir='rtl']) .arrow {
+    transform: scaleX(-1);
+  }
 
   @media (max-width: 620px) {
     a {
@@ -84,7 +96,7 @@ const { documents, target = 'page' } = Astro.props;
       gap: var(--sp-2) var(--sp-4);
     }
     .m {
-      margin-left: calc(0.72rem + var(--sp-5));
+      margin-inline-start: calc(0.72rem + var(--sp-5));
       width: 100%;
     }
   }

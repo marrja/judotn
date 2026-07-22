@@ -16,6 +16,24 @@
   font-weight: 300 800;
   font-display: swap;
 }
+/*
+ * Neither Manrope nor Platypi contains a single Arabic glyph, so Arabic text
+ * falls through to the next family in the stack on its own — no `:lang()` rule
+ * and no conditional font switching needed.
+ *
+ * `unicode-range` is what makes that free: the browser only downloads this
+ * 166 kB face when the page actually paints a character inside these blocks,
+ * so the French and English builds never request it.
+ */
+@font-face {
+  font-family: 'Noto Sans Arabic';
+  src: url('/fonts/noto-sans-arabic-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range:
+    U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0898-08E1, U+08E3-08FF, U+200C-200E,
+    U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FEFF;
+}
 
 :root {
   /* ── colour ─────────────────────────────────────────────── */
@@ -34,8 +52,12 @@
   --accent-ink: #ffffff;
 
   /* ── type ───────────────────────────────────────────────── */
-  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Platypi', Georgia, 'Times New Roman', serif;
+  /* Noto Sans Arabic sits in both stacks: it only ever renders the Arabic
+     code points (unicode-range above), and it stands in for the Latin serif
+     too, since Platypi has no Arabic and Arabic has no italic/serif tradition
+     to honour. */
+  --font-sans: 'Manrope', 'Noto Sans Arabic', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Platypi', 'Noto Sans Arabic', Georgia, 'Times New Roman', serif;
   --step--1: clamp(0.79rem, 0.77rem + 0.1vw, 0.84rem);
   --step-0: clamp(1rem, 0.96rem + 0.18vw, 1.09rem);
   --step-1: clamp(1.25rem, 1.18rem + 0.35vw, 1.45rem);
@@ -144,11 +166,11 @@ ol {
 
 .skip-link {
   position: absolute;
-  left: -9999px;
+  inset-inline-start: -9999px;
   z-index: 100;
 }
 .skip-link:focus {
-  left: var(--sp-4);
+  inset-inline-start: var(--sp-4);
   top: var(--sp-4);
   padding: var(--sp-3) var(--sp-4);
   background: var(--fg);
@@ -175,7 +197,7 @@ ol {
 }
 .prose ul,
 .prose ol {
-  padding-left: 1.3em;
+  padding-inline-start: 1.3em;
   margin-block: 0 1em;
   max-width: var(--measure);
 }
@@ -191,8 +213,8 @@ ol {
 }
 .prose blockquote {
   margin: var(--sp-6) 0;
-  padding-left: var(--sp-5);
-  border-left: 3px solid var(--accent);
+  padding-inline-start: var(--sp-5);
+  border-inline-start: 3px solid var(--accent);
   font-family: var(--font-serif);
   font-size: var(--step-1);
   color: var(--mute);
@@ -206,7 +228,7 @@ ol {
 .prose td {
   border: 1px solid var(--line);
   padding: var(--sp-3);
-  text-align: left;
+  text-align: start;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -219,4 +241,45 @@ ol {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── right-to-left (Arabic) ───────────────────────────────────
+ *
+ * This is a correctness fix, not a stylistic preference. The whole design
+ * signals hierarchy with `letter-spacing` + `text-transform: uppercase` on
+ * eyebrows, labels, tags and buttons. Arabic is a CURSIVE script: spacing its
+ * letters forces apart glyphs that are meant to join, breaking the word, and
+ * `uppercase` does nothing since Arabic is unicameral. So under RTL that
+ * treatment is removed and the contrast is carried by weight and size, which
+ * is already how Arabic typography marks emphasis.
+ */
+[dir='rtl'] .eyebrow,
+[dir='rtl'] .kick,
+[dir='rtl'] .lbl,
+[dir='rtl'] .tag,
+[dir='rtl'] .b1,
+[dir='rtl'] .b2,
+[dir='rtl'] .btn,
+[dir='rtl'] .home,
+[dir='rtl'] h1,
+[dir='rtl'] h2,
+[dir='rtl'] .head h2,
+[dir='rtl'] header time {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Arabic runs longer than French/English for the same content and does not
+   hyphenate the Latin way, so the balance/measure tweaks that flatter short
+   Latin display lines fight it. Let it wrap naturally. */
+[dir='rtl'] h1,
+[dir='rtl'] h2,
+[dir='rtl'] h3 {
+  text-wrap: initial;
+}
+
+/* Nudge the line-height up: Arabic sits taller than Latin at the same size
+   because of its ascenders, descenders and diacritics. */
+[dir='rtl'] body {
+  line-height: 1.8;
 }

@@ -1,22 +1,37 @@
 ---
+/**
+ * Single 404 page, in French, served at the root.
+ *
+ * Apache/LiteSpeed takes exactly one `ErrorDocument` path, so there is no way
+ * to serve a per-language 404 from static hosting. It therefore leads with the
+ * default language and offers all three home pages, so a reader who arrived on
+ * a bad /en/ or /ar/ URL is one click from their own language.
+ */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { primaryNav } from '../navigation';
+import { primaryNav } from '../navigation.ts';
+import {
+  DEFAULT_LOCALE,
+  LOCALE_NAMES,
+  LOCALES,
+  localePath,
+  useTranslations,
+} from '../i18n/index.ts';
+import { BCP47 } from '../i18n/ui.ts';
+
+const t = useTranslations(DEFAULT_LOCALE);
 ---
 
-<BaseLayout
-  title="Page introuvable"
-  description="La page demandée n'existe pas ou a été déplacée."
-  noindex
->
+<BaseLayout title={t('notFound.title')} description={t('notFound.description')} noindex>
   <section class="section wrap">
     <div class="container">
-      <p class="eyebrow">Erreur 404</p>
-      <h1>Page introuvable</h1>
-      <p class="lede">Cette page n'existe pas ou a été déplacée lors de la refonte du site.</p>
-      <nav aria-label="Sections principales">
+      <p class="eyebrow">{t('notFound.eyebrow')}</p>
+      <h1>{t('notFound.title')}</h1>
+      <p class="lede">{t('notFound.lede')}</p>
+
+      <nav aria-label={t('a11y.mainSections')}>
         <ul>
           {
-            primaryNav.map((i) => (
+            primaryNav(DEFAULT_LOCALE).map((i) => (
               <li>
                 <a href={i.href}>{i.label}</a>
               </li>
@@ -24,7 +39,21 @@ import { primaryNav } from '../navigation';
           }
         </ul>
       </nav>
-      <a class="home" href="/">Retour à l'accueil</a>
+
+      <div class="actions">
+        <a class="home" href={localePath(DEFAULT_LOCALE, '/')}>{t('notFound.home')}</a>
+        <ul class="langs">
+          {
+            LOCALES.filter((l) => l !== DEFAULT_LOCALE).map((l) => (
+              <li>
+                <a href={localePath(l, '/')} hreflang={BCP47[l]} lang={BCP47[l]}>
+                  {LOCALE_NAMES[l]}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </div>
   </section>
 </BaseLayout>
@@ -55,14 +84,14 @@ import { primaryNav } from '../navigation';
     font-size: var(--step-1);
     font-family: var(--font-serif);
   }
-  ul {
+  nav ul {
     list-style: none;
     display: flex;
     flex-wrap: wrap;
     gap: var(--sp-2);
     margin-block: var(--sp-6);
   }
-  ul a {
+  nav a {
     display: block;
     border: 1px solid var(--line-strong);
     padding: 0.6rem 1rem;
@@ -70,9 +99,15 @@ import { primaryNav } from '../navigation';
     font-weight: 700;
     text-decoration: none;
   }
-  ul a:hover {
+  nav a:hover {
     border-color: var(--accent-text);
     color: var(--accent-text);
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+    flex-wrap: wrap;
   }
   .home {
     display: inline-block;
@@ -88,5 +123,19 @@ import { primaryNav } from '../navigation';
   .home:hover {
     background: var(--accent);
     color: var(--accent-ink);
+  }
+  .langs {
+    display: flex;
+    gap: var(--sp-4);
+    list-style: none;
+  }
+  .langs a {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--mute);
+    text-underline-offset: 4px;
+  }
+  .langs a:hover {
+    color: var(--fg);
   }
 </style>

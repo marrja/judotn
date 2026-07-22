@@ -1,14 +1,22 @@
 ---
-import { primaryNav, usefulLinks, olympicLinks } from '../navigation';
-import { SITE } from '../site.js';
+import { primaryNav, usefulLinks, olympicLinks } from '../navigation.ts';
+import { localePath, stripLocale, useTranslations } from '../i18n/index.ts';
 
-const federation = primaryNav.filter((i) => !['/documents/', '/actualites/'].includes(i.href));
+const { lang } = stripLocale(Astro.url.pathname);
+const t = useTranslations(lang);
+const at = (path: string) => localePath(lang, path);
+
+// Documents and news have their own columns elsewhere on the page, so the
+// federation column drops them. Compared against localised hrefs, since every
+// internal nav href is prefixed for the current language.
+const listed = [at('/documents/'), at('/actualites/')];
+const federation = primaryNav(lang).filter((i) => !listed.includes(i.href));
 const year = new Date().getFullYear();
 
 const columns = [
-  { title: 'La Fédération', items: federation },
-  { title: 'Liens utiles', items: usefulLinks },
-  { title: "L'Olympisme", items: olympicLinks },
+  { title: t('footer.federation'), items: federation },
+  { title: t('footer.usefulLinks'), items: usefulLinks(lang) },
+  { title: t('footer.olympism'), items: olympicLinks(lang) },
 ];
 ---
 
@@ -18,13 +26,10 @@ const columns = [
       <div>
         <div class="brand">
           <img src="/logo-judo-dark.png" alt="" width="46" height="45" />
-          <b>Fédération Tunisienne<br />de Judo</b>
+          <b>{t('site.title')}</b>
         </div>
-        <p>
-          La Fédération Tunisienne de Judo encadre la pratique du judo et des disciplines associées
-          sur l'ensemble du territoire tunisien.
-        </p>
-        <a class="feed" href="/rss.xml">Flux RSS</a>
+        <p>{t('site.footerBlurb')}</p>
+        <a class="feed" href={at('/rss.xml')}>{t('footer.rss')}</a>
       </div>
 
       {
@@ -50,8 +55,8 @@ const columns = [
     </div>
 
     <div class="bottom">
-      <span>© {year} {SITE.title}</span>
-      <a href="/contact/">Contact</a>
+      <span>© {year} {t('site.title')}</span>
+      <a href={at('/contact/')}>{t('nav.contact')}</a>
       <span>judo.tn</span>
     </div>
   </div>
@@ -83,6 +88,7 @@ const columns = [
     font-weight: 800;
     line-height: 1.2;
     letter-spacing: -0.02em;
+    max-width: 16ch;
   }
   p {
     font-size: 0.86rem;

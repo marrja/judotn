@@ -1,0 +1,65 @@
+---
+/**
+ * Language switcher. Links to the current page's counterpart in each language
+ * rather than to that language's home page — `stripLocale` recovers the
+ * canonical path from whichever locale is being viewed.
+ *
+ * Every route fans out to all three locales, so a counterpart always exists.
+ * Each link carries `hreflang` and its own `lang`, so a screen reader in French
+ * announces "العربية" in Arabic rather than spelling it out in French.
+ */
+import { alternates, BCP47, LOCALE_NAMES, stripLocale, useTranslations } from '../i18n/index.ts';
+
+const { lang: current } = stripLocale(Astro.url.pathname);
+const t = useTranslations(current);
+const options = alternates(Astro.url.pathname);
+---
+
+<nav class="langs" aria-label={t('a11y.langSwitcher')}>
+  <ul>
+    {
+      options.map((o) => (
+        <li>
+          <a
+            href={o.href}
+            hreflang={BCP47[o.lang]}
+            lang={BCP47[o.lang]}
+            dir={o.dir}
+            aria-current={o.lang === current ? 'true' : undefined}
+          >
+            {LOCALE_NAMES[o.lang]}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  ul {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    list-style: none;
+  }
+  /* Hairline separators between the three, drawn on the gap rather than as
+     characters so they are not read out. */
+  li + li {
+    border-inline-start: 1px solid var(--line-strong);
+    padding-inline-start: var(--sp-2);
+  }
+  a {
+    display: block;
+    text-decoration: none;
+    font-size: var(--step--1);
+    font-weight: 700;
+    color: var(--mute);
+    padding-block: 0.15rem;
+  }
+  a:hover {
+    color: var(--fg);
+  }
+  a[aria-current] {
+    color: var(--accent-text);
+  }
+</style>

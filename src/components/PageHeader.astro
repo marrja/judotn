@@ -1,29 +1,37 @@
 ---
+import { localePath, stripLocale, useTranslations } from '../i18n/index.ts';
+
 interface Props {
   title: string;
   intro?: string;
-  /** Breadcrumb trail, excluding the current page. */
+  /**
+   * Breadcrumbs BETWEEN the home page and this one, excluding both. The home
+   * crumb is prepended automatically — every caller wanted it, and having each
+   * one translate "Accueil" itself was four copies of the same three lines.
+   */
   crumbs?: { label: string; href: string }[];
 }
 const { title, intro, crumbs = [] } = Astro.props;
+
+const { lang } = stripLocale(Astro.url.pathname);
+const t = useTranslations(lang);
+const trail = [{ label: t('nav.home'), href: localePath(lang, '/') }, ...crumbs];
 ---
 
 <div class="page-header">
   <div class="container">
-    {
-      crumbs.length > 0 && (
-        <nav class="crumbs" aria-label="Fil d'Ariane">
-          <ol>
-            {crumbs.map((c) => (
-              <li>
-                <a href={c.href}>{c.label}</a>
-              </li>
-            ))}
-            <li aria-current="page">{title}</li>
-          </ol>
-        </nav>
-      )
-    }
+    <nav class="crumbs" aria-label={t('a11y.breadcrumb')}>
+      <ol>
+        {
+          trail.map((c) => (
+            <li>
+              <a href={c.href}>{c.label}</a>
+            </li>
+          ))
+        }
+        <li aria-current="page">{title}</li>
+      </ol>
+    </nav>
     <h1>{title}</h1>
     {intro && <p class="intro">{intro}</p>}
   </div>
@@ -56,7 +64,7 @@ const { title, intro, crumbs = [] } = Astro.props;
   }
   .crumbs li + li::before {
     content: '/';
-    margin-right: var(--sp-2);
+    margin-inline-end: var(--sp-2);
     color: var(--line-strong);
   }
   .crumbs a {

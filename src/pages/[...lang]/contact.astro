@@ -1,0 +1,144 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { CONTACT } from '../../site.js';
+import { usefulLinks } from '../../navigation.ts';
+import { localeFromParam, localeParams, useTranslations } from '../../i18n/index.ts';
+
+export const getStaticPaths = localeParams;
+
+const lang = localeFromParam(Astro.params.lang);
+const t = useTranslations(lang);
+---
+
+<BaseLayout title={t('contact.title')} description={t('contact.description')}>
+  <PageHeader title={t('contact.title')} intro={t('contact.intro')} />
+
+  <section class="section">
+    <div class="container cols">
+      <div>
+        <h2>{t('contact.details')}</h2>
+        <dl>
+          {
+            CONTACT.map((c) => (
+              <div class="row">
+                <dt>{t(c.labelKey)}</dt>
+                <dd>
+                  {c.value === null ? (
+                    t('contact.toComplete')
+                  ) : c.href ? (
+                    <a href={c.href}>{c.value}</a>
+                  ) : (
+                    c.value
+                  )}
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+
+      <div>
+        <h2>{t('contact.onlineServices')}</h2>
+        <p>{t('contact.onlineBlurb')}</p>
+        <ul class="links">
+          <li>
+            <a
+              href="https://www.tunisie-judo.org/licence.html"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {t('nav.licences')}
+            </a>
+          </li>
+          {
+            usefulLinks(lang)
+              .slice(0, 3)
+              .map((l) => (
+                <li>
+                  <a href={l.href} rel="noopener noreferrer" target="_blank">
+                    {l.label}
+                  </a>
+                </li>
+              ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-7);
+  }
+  h2 {
+    font-size: var(--step-1);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--sp-5);
+  }
+  dl {
+    margin: 0;
+    border-top: 1px solid var(--line);
+  }
+  .row {
+    display: flex;
+    gap: var(--sp-4);
+    padding: var(--sp-4) 0;
+    border-bottom: 1px solid var(--line);
+  }
+  dt {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    flex: none;
+    width: 9rem;
+    padding-top: 0.2rem;
+  }
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+  dd a {
+    color: var(--fg);
+    text-underline-offset: 3px;
+  }
+  p {
+    color: var(--mute);
+  }
+  .links {
+    list-style: none;
+    border-top: 1px solid var(--line);
+    margin-top: var(--sp-5);
+  }
+  .links li {
+    border-bottom: 1px solid var(--line);
+  }
+  .links a {
+    display: block;
+    padding: var(--sp-4) 0;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .links a:hover {
+    color: var(--accent-text);
+  }
+
+  @media (max-width: 780px) {
+    .cols {
+      grid-template-columns: 1fr;
+    }
+    .row {
+      flex-direction: column;
+      gap: var(--sp-1);
+    }
+    dt {
+      width: auto;
+    }
+  }
+</style>

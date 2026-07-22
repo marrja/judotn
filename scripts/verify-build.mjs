@@ -43,24 +43,55 @@ const htmlFiles = [];
   }
 })(dist);
 
-// ── 1. every legacy permalink still resolves ────────────────────────────────
-section('legacy permalinks');
+// ── 1. every routed entry resolves, at the root for FR and prefixed for en/ar ─
+// The French `url` is the inherited WordPress permalink: it must build at the
+// bare root, unprefixed, or the redirect map and every old inbound link break.
+section('routed permalinks');
+const LOCALES = ['fr', 'en', 'ar'];
 const collections = ['posts', 'documents'];
-let legacyCount = 0;
+let urlCount = 0;
+let frLegacyCount = 0;
 for (const col of collections) {
-  const dir = path.join(root, 'src/content', col);
-  for (const f of fs.readdirSync(dir).filter((f) => f.endsWith('.md'))) {
-    const fm = fs.readFileSync(path.join(dir, f), 'utf8');
-    const url = fm.match(/^legacyUrl: '(.+)'$/m)?.[1];
-    if (!url) {
-      fail(`${col}/${f}: no legacyUrl in frontmatter`);
+  for (const lang of LOCALES) {
+    const dir = path.join(root, 'src/content', col, lang);
+    if (!fs.existsSync(dir)) {
+      fail(`${col}/${lang}/ is missing — a locale has no content`);
       continue;
     }
-    legacyCount++;
-    if (!routes.has(url)) fail(`${col}/${f}: ${url} was not built`);
+    for (const f of fs.readdirSync(dir).filter((f) => f.endsWith('.md'))) {
+      const fm = fs.readFileSync(path.join(dir, f), 'utf8');
+      const url = fm.match(/^url: '(.+)'$/m)?.[1];
+      if (!url) {
+        fail(`${col}/${lang}/${f}: no url in frontmatter`);
+        continue;
+      }
+      const built = lang === 'fr' ? url : `/${lang}${url}`;
+      urlCount++;
+      if (lang === 'fr') frLegacyCount++;
+      if (!routes.has(built)) fail(`${col}/${lang}/${f}: ${built} was not built`);
+    }
   }
 }
-console.log(`  checked ${legacyCount} legacy URLs`);
+console.log(`  checked ${urlCount} routed URLs (${frLegacyCount} French permalinks at root)`);
+
+// Every routed entry must exist in all three languages: a missing translation
+// would leave a language switcher link pointing at a 404.
+section('locale parity');
+for (const col of collections) {
+  const keysByLocale = Object.fromEntries(
+    LOCALES.map((lang) => {
+      const dir = path.join(root, 'src/content', col, lang);
+      const keys = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.md')) : [];
+      return [lang, new Set(keys)];
+    }),
+  );
+  for (const key of keysByLocale.fr) {
+    for (const lang of ['en', 'ar']) {
+      if (!keysByLocale[lang].has(key)) fail(`${col}/${key}: no ${lang} translation`);
+    }
+  }
+}
+console.log(`  every post and document exists in fr, en and ar`);
 
 // ── 2. redirect targets exist ───────────────────────────────────────────────
 section('redirect targets');
@@ -121,6 +152,11 @@ const assets = new Set();
 let linkCount = 0;
 const badLinks = new Set();
 for (const file of htmlFiles) {
+  // The 404 is the single ErrorDocument served in place of ANY missing URL, so
+  // its language switcher self-links (/404/, /en/404/, /ar/404/) are notional —
+  // they resolve to this very page by the ErrorDocument rule, not to a route.
+  // Its nav links are identical to every other page's and checked there.
+  if (path.relative(dist, file) === '404.html') continue;
   const html = fs.readFileSync(file, 'utf8');
   for (const m of html.matchAll(/(?:href|src)="(\/[^"#]*)"/g)) {
     const href = m[1];
@@ -167,11 +203,21 @@ if (pdfs.length !== 10) fail(`expected 10 PDFs in dist/documents, found ${pdfs.l
 console.log(`  ${pdfs.length} PDFs present`);
 
 // ── 6. accessibility & SEO basics on every page ─────────────────────────────
+// The expected lang/dir come from the URL prefix: /ar/… is Arabic and RTL,
+// /en/… is English, everything else is French. The 404 is French by design.
 section('per-page head + a11y');
+const langForRoute = (rel) => {
+  const seg = rel.split('/')[0];
+  if (seg === 'ar') return { lang: 'ar-TN', dir: 'rtl' };
+  if (seg === 'en') return { lang: 'en', dir: 'ltr' };
+  return { lang: 'fr-TN', dir: 'ltr' };
+};
 for (const file of htmlFiles) {
   const html = fs.readFileSync(file, 'utf8');
-  const rel = path.relative(dist, file);
-  if (!/<html lang="fr"/.test(html)) fail(`${rel}: missing lang="fr"`);
+  const rel = path.relative(dist, file).split(path.sep).join('/');
+  const { lang, dir } = langForRoute(rel);
+  if (!html.includes(`<html lang="${lang}" dir="${dir}">`))
+    fail(`${rel}: expected <html lang="${lang}" dir="${dir}">`);
   if (!/<title>[^<]{5,}<\/title>/.test(html)) fail(`${rel}: missing or empty <title>`);
   if (!/<meta name="description" content="[^"]{20,}"/.test(html))
     fail(`${rel}: weak meta description`);
@@ -182,10 +228,46 @@ for (const file of htmlFiles) {
     if (!/\balt=/.test(img[0])) fail(`${rel}: <img> without alt`);
   }
 }
+console.log(`  ${htmlFiles.length} pages carry the right lang/dir, title, description, canonical`);
+
+// ── 7. i18n: hreflang, tri-locale parity, Arabic actually rendered ──────────
+section('i18n wiring');
+// Content pages — home, news, documents, contact and the five stubs — exist in
+// all three locales, so each must advertise all three via hreflang. Article
+// pages (posts/documents) are also translated, but the assertions above already
+// prove the alternates were built; here we spot-check the top-level pages.
+const HREFLANGS = ['fr-TN', 'en', 'ar-TN', 'x-default'];
+const i18nPages = htmlFiles.filter((f) => {
+  const rel = path.relative(dist, f).split(path.sep).join('/');
+  return rel === 'index.html' || rel === 'en/index.html' || rel === 'ar/index.html';
+});
+for (const file of i18nPages) {
+  const html = fs.readFileSync(file, 'utf8');
+  const rel = path.relative(dist, file).split(path.sep).join('/');
+  for (const hl of HREFLANGS) {
+    if (!html.includes(`hreflang="${hl}"`)) fail(`${rel}: missing hreflang="${hl}"`);
+  }
+}
+// The Arabic home must actually contain Arabic script and the Tunisian month
+// name — a guard against Intl silently falling back to Latin or Mashriq forms.
+const arHome = fs.readFileSync(path.join(dist, 'ar/index.html'), 'utf8');
+if (!/[؀-ۿ]/.test(arHome)) fail('ar/index.html: no Arabic characters rendered');
+const arNews = fs.readFileSync(
+  path.join(dist, 'ar/2026/07/21/championnat-afrique-cadets-maroc-2026/index.html'),
+  'utf8',
+);
+if (!arNews.includes('جويلية')) fail('ar news post: Tunisian month name "جويلية" not rendered');
+if (/يوليو/.test(arNews)) fail('ar news post: Mashriq month name leaked in — wrong Intl locale');
+// The Arabic font is heavy; only the Arabic build should preload it.
+if (!arHome.includes('noto-sans-arabic')) fail('ar/index.html: Arabic font not preloaded');
+const frHome = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+if (frHome.includes('noto-sans-arabic'))
+  fail('index.html: French build preloads the Arabic font (166 kB wasted)');
+console.log('  hreflang complete on home pages; Arabic rendered with Tunisian dates');
 
 console.log(
   failures === 0
-    ? `\nAll checks passed — ${htmlFiles.length} pages, ${legacyCount} legacy URLs preserved.`
+    ? `\nAll checks passed — ${htmlFiles.length} pages, ${frLegacyCount} French permalinks preserved, 3 locales.`
     : `\n${failures} check(s) failed.`,
 );
 process.exit(failures === 0 ? 0 : 1);

@@ -2,13 +2,27 @@ import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
 /**
- * `legacyUrl` is the URL WordPress served this entry at. It is the routing
- * key, not decoration — the post routes build straight from it so the
- * original /YYYY/MM/DD/slug/ permalinks survive the migration.
+ * Every collection is split one directory per locale — `posts/fr/x.md`,
+ * `posts/en/x.md`, `posts/ar/x.md` — so an entry's `id` is `<locale>/<key>`.
+ *
+ * The filename IS the translation key: the three files that share a name are
+ * the same entry in three languages, which is all the language switcher needs.
+ * There is deliberately no `translationKey` field to keep in sync.
+ *
+ * Do NOT add a `slug` field to any frontmatter here. Astro's glob loader treats
+ * `slug` as an override for the generated `id`, which would collapse all three
+ * locales of an entry onto a single id and silently break the split above.
  */
-const legacy = {
-  legacySlug: z.string(),
-  legacyUrl: z.string().startsWith('/').endsWith('/'),
+
+/**
+ * `url` is the canonical French path this entry is served at, and it is the
+ * routing key rather than decoration: the post route builds straight from it,
+ * so the original WordPress permalinks survive and a filename can never drift
+ * away from its published address. The other locales are this same path behind
+ * an `/en/` or `/ar/` prefix.
+ */
+const routed = {
+  url: z.string().startsWith('/').endsWith('/'),
 };
 
 const posts = defineCollection({
@@ -21,7 +35,7 @@ const posts = defineCollection({
       cover: image().optional(),
       coverAlt: z.string().default(''),
       tags: z.array(z.string()).default([]),
-      ...legacy,
+      ...routed,
     }),
 });
 
@@ -32,7 +46,7 @@ const documents = defineCollection({
     date: z.coerce.date(),
     pdf: z.string().startsWith('/documents/'),
     pdfBytes: z.number().int().positive(),
-    ...legacy,
+    ...routed,
   }),
 });
 

@@ -2,7 +2,7 @@
 import Seo from '../components/Seo.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE } from '../site.js';
+import { BCP47, DIR, localePath, stripLocale, useTranslations } from '../i18n/index.ts';
 import '../styles/global.css';
 
 interface Props {
@@ -15,23 +15,48 @@ interface Props {
 }
 
 const { title, description, image, type, publishedAt, noindex } = Astro.props;
+
+// Every component derives its own locale from the path rather than being
+// handed one. There is exactly one source of truth (the URL) and no prop to
+// forget to pass down.
+const { lang } = stripLocale(Astro.url.pathname);
+const t = useTranslations(lang);
 ---
 
 <!doctype html>
-<html lang={SITE.lang}>
+<html lang={BCP47[lang]} dir={DIR[lang]}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0e0e10" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/logo-judo.png" />
-    <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={t('site.title')}
+      href={localePath(lang, '/rss.xml')}
+    />
     <link rel="preload" href="/fonts/manrope-var.woff2" as="font" type="font/woff2" crossorigin />
+    {
+      /* Only the Arabic build preloads the Arabic face. The @font-face rule is
+         unicode-range scoped so Latin pages never request it at all, but a
+         blanket preload would download it anyway and waste 166 kB. */
+      lang === 'ar' && (
+        <link
+          rel="preload"
+          href="/fonts/noto-sans-arabic-var.woff2"
+          as="font"
+          type="font/woff2"
+          crossorigin
+        />
+      )
+    }
     <Seo {title} {description} {image} {type} {publishedAt} {noindex} />
     <slot name="head" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Aller au contenu principal</a>
+    <a class="skip-link" href="#main">{t('a11y.skipLink')}</a>
     <Header />
     <main id="main">
       <slot />

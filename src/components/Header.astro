@@ -1,18 +1,26 @@
 ---
-import { primaryNav, utilityNav } from '../navigation';
-import { SITE } from '../site.js';
+import { primaryNav, utilityNav } from '../navigation.ts';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import { localePath, stripLocale, useTranslations } from '../i18n/index.ts';
+
+const { lang } = stripLocale(Astro.url.pathname);
+const t = useTranslations(lang);
+const home = localePath(lang, '/');
 
 const path = Astro.url.pathname;
-const isCurrent = (href: string) => path === href || (href !== '/' && path.startsWith(href));
+const isCurrent = (href: string) => path === href || (href !== home && path.startsWith(href));
+
+const primary = primaryNav(lang);
+const utility = utilityNav(lang);
 ---
 
 <div class="utility">
   <div class="container row">
-    <span>{SITE.description.split(':')[0]}</span>
-    <nav aria-label="Navigation secondaire">
+    <span class="tagline">{t('site.tagline')}</span>
+    <nav class="util-nav" aria-label={t('a11y.navSecondary')}>
       <ul>
         {
-          utilityNav.map((i) => (
+          utility.map((i) => (
             <li>
               <a href={i.href}>{i.label}</a>
             </li>
@@ -20,23 +28,24 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
         }
       </ul>
     </nav>
+    <LanguageSwitcher />
   </div>
 </div>
 
 <header>
   <div class="container bar">
-    <a class="brand" href="/">
+    <a class="brand" href={home}>
       <img src="/logo-judo-dark.png" alt="" width="46" height="45" />
       <span>
-        <b>Fédération Tunisienne de Judo</b>
-        <i>{SITE.shortTitle}</i>
+        <b>{t('site.title')}</b>
+        <i>{t('site.shortTitle')}</i>
       </span>
     </a>
 
-    <nav id="primary-nav" aria-label="Navigation principale">
+    <nav class="primary" id="primary-nav" aria-label={t('a11y.navPrimary')}>
       <ul>
         {
-          primaryNav.map((item) => (
+          primary.map((item) => (
             <li class={item.children ? 'has-sub' : ''}>
               <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
                 {item.label}
@@ -51,7 +60,7 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
                         target={c.external ? '_blank' : undefined}
                       >
                         {c.label}
-                        {c.external && <span aria-label="(site externe)">↗</span>}
+                        {c.external && <span aria-label={t('a11y.externalLink')}>↗</span>}
                       </a>
                     </li>
                   ))}
@@ -64,7 +73,7 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     </nav>
 
     <button type="button" id="nav-toggle" aria-expanded="false" aria-controls="primary-nav">
-      <span class="sr">Menu</span>
+      <span class="sr">{t('a11y.menu')}</span>
       <i aria-hidden="true"></i>
     </button>
   </div>
@@ -81,6 +90,8 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
 </script>
 
 <style>
+  /* Navs are selected by class, never by aria-label: those labels are
+     translated, so an attribute selector would only match the French build. */
   .utility {
     border-bottom: 1px solid var(--line);
     font-size: var(--step--1);
@@ -98,8 +109,8 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     gap: var(--sp-5);
     list-style: none;
   }
-  .utility nav {
-    margin-left: auto;
+  .util-nav {
+    margin-inline-start: auto;
   }
   .utility a {
     text-decoration: none;
@@ -141,15 +152,15 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     color: var(--accent-text);
   }
 
-  nav[aria-label='Navigation principale'] {
-    margin-left: auto;
+  .primary {
+    margin-inline-start: auto;
   }
-  nav[aria-label='Navigation principale'] > ul {
+  .primary > ul {
     display: flex;
     gap: 0.1rem;
     list-style: none;
   }
-  nav[aria-label='Navigation principale'] a {
+  .primary a {
     display: block;
     font-size: 0.79rem;
     font-weight: 700;
@@ -158,11 +169,10 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     position: relative;
     white-space: nowrap;
   }
-  nav[aria-label='Navigation principale'] > ul > li > a::after {
+  .primary > ul > li > a::after {
     content: '';
     position: absolute;
-    left: var(--sp-3);
-    right: var(--sp-3);
+    inset-inline: var(--sp-3);
     bottom: 0.4rem;
     height: 2px;
     background: var(--accent-text);
@@ -170,8 +180,13 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
     transform-origin: left;
     transition: transform 0.22s;
   }
-  nav[aria-label='Navigation principale'] > ul > li > a:hover::after,
-  nav[aria-label='Navigation principale'] a[aria-current='page']::after {
+  /* transform-origin takes no logical keyword, so the RTL build flips it by
+     hand — otherwise the underline would grow away from the text. */
+  :global([dir='rtl']) .primary > ul > li > a::after {
+    transform-origin: right;
+  }
+  .primary > ul > li > a:hover::after,
+  .primary a[aria-current='page']::after {
     transform: scaleX(1);
   }
 
@@ -205,12 +220,12 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
   .sub span {
     font-size: 0.7em;
     opacity: 0.6;
-    margin-left: 0.3em;
+    margin-inline-start: 0.3em;
   }
 
   #nav-toggle {
     display: none;
-    margin-left: auto;
+    margin-inline-start: auto;
     width: 42px;
     height: 42px;
     place-items: center;
@@ -232,7 +247,7 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
   #nav-toggle i::after {
     content: '';
     position: absolute;
-    left: 0;
+    inset-inline-start: 0;
   }
   #nav-toggle i::before {
     top: -5px;
@@ -249,29 +264,29 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
   }
 
   @media (max-width: 1080px) {
-    .utility nav {
+    .util-nav {
       display: none;
     }
     #nav-toggle {
       display: grid;
     }
-    nav[aria-label='Navigation principale'] {
+    .primary {
       display: none;
       width: 100%;
       order: 3;
     }
-    nav[aria-label='Navigation principale'].open {
+    .primary.open {
       display: block;
       padding-bottom: var(--sp-4);
     }
-    nav[aria-label='Navigation principale'] > ul {
+    .primary > ul {
       flex-direction: column;
       gap: 0;
     }
-    nav[aria-label='Navigation principale'] > ul > li {
+    .primary > ul > li {
       border-top: 1px solid var(--line);
     }
-    nav[aria-label='Navigation principale'] a {
+    .primary a {
       padding: var(--sp-3) 0;
       font-size: 0.95rem;
     }
@@ -282,7 +297,8 @@ const isCurrent = (href: string) => path === href || (href !== '/' && path.start
       transform: none;
       border: 0;
       background: transparent;
-      padding: 0 0 var(--sp-3) var(--sp-4);
+      padding: 0 0 var(--sp-3);
+      padding-inline-start: var(--sp-4);
       min-width: 0;
     }
     .sub a {

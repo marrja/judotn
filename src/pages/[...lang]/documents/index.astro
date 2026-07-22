@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PageHeader from '../../../components/PageHeader.astro';
+import DocumentList from '../../../components/DocumentList.astro';
+import {
+  DEFAULT_LOCALE,
+  localeFromParam,
+  localeParams,
+  useTranslations,
+} from '../../../i18n/index.ts';
+import { getLocalized } from '../../../lib/content.ts';
+
+export const getStaticPaths = localeParams;
+
+const lang = localeFromParam(Astro.params.lang);
+const t = useTranslations(lang);
+const documents = await getLocalized('documents', lang);
+---
+
+<BaseLayout title={t('documents.title')} description={t('documents.description')}>
+  <PageHeader title={t('documents.title')} intro={t('documents.intro')} />
+
+  <section class="section">
+    <div class="container">
+      {
+        /* The titles are translated but the PDFs behind them are the
+           federation's original French texts. Saying so up front beats letting
+           a reader discover it after a 10 MB download. */
+        lang !== DEFAULT_LOCALE && <p class="note">{t('documents.frenchOnly')}</p>
+      }
+      <DocumentList documents={documents} />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .note {
+    border-inline-start: 3px solid var(--accent);
+    padding-inline-start: var(--sp-4);
+    margin-bottom: var(--sp-6);
+    color: var(--mute);
+    font-size: var(--step--1);
+    max-width: var(--measure);
+  }
+</style>

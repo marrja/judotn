@@ -1,26 +1,30 @@
 /**
- * Single source of truth for site-wide values.
+ * Site-wide values that are not language-dependent.
  * Plain JS (not .ts) so astro.config.mjs can import it directly.
  *
- * TODO: the contact details below are placeholders. The original WordPress
- * `/contact/` page was empty and the database held no address, phone or
- * public email, so there was nothing to migrate. Replace these with the
- * federation's real details — they are used on /contact/ and in the footer.
+ * Anything with words in it now lives in src/i18n/ui.ts instead — the title,
+ * description and locale that used to sit here are per-language.
  */
 export const SITE = {
   url: 'https://judo.tn',
-  title: 'Fédération Tunisienne de Judo',
-  shortTitle: 'FTJUDO',
-  description:
-    'Site officiel de la Fédération Tunisienne de Judo (FTJUDO) : actualités, ' +
-    'documents officiels, règlements et informations sur le judo tunisien.',
-  lang: 'fr',
-  locale: 'fr_TN',
 };
 
-/** @type {{label: string, value: string, href: string | null}[]} */
+/**
+ * Contact rows. Labels are translated at render time from `labelKey`; only the
+ * values themselves are shared across languages, since an address and a phone
+ * number do not change with the reader.
+ *
+ * TODO: these are placeholders. The original WordPress `/contact/` page was
+ * empty and the database held no address, phone or public email, so there was
+ * nothing to migrate. Fill in `value` (and `href` where it makes sense) with
+ * the federation's real details — they are used on /contact/ and in the footer.
+ * A null `value` renders as the translated "to be completed" placeholder.
+ *
+ * @type {{labelKey: 'contact.address' | 'contact.phone' | 'contact.email',
+ *         value: string | null, href: string | null}[]}
+ */
 export const CONTACT = [
-  { label: 'Adresse', value: 'À compléter', href: null },
-  { label: 'Téléphone', value: 'À compléter', href: null },
-  { label: 'E-mail', value: 'À compléter', href: null },
+  { labelKey: 'contact.address', value: null, href: null },
+  { labelKey: 'contact.phone', value: null, href: null },
+  { labelKey: 'contact.email', value: null, href: null },
 ];

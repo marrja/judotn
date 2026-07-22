@@ -1,7 +1,8 @@
 ---
 import { Image } from 'astro:assets';
 import type { CollectionEntry } from 'astro:content';
-import { formatDate } from '../lib/format';
+import { formatDate, useTranslations } from '../i18n/index.ts';
+import { entryHref, localeOf } from '../lib/content.ts';
 
 interface Props {
   post: CollectionEntry<'posts'>;
@@ -9,12 +10,18 @@ interface Props {
   featured?: boolean;
 }
 const { post, featured = false } = Astro.props;
-const { title, date, cover, coverAlt, category, legacyUrl } = post.data;
-const label = category === 'annonces' ? 'Annonce' : 'Actualité';
+const { title, date, cover, coverAlt, category } = post.data;
+
+// The card takes its language from the entry, not from the page: a listing
+// only ever shows entries of its own locale, and this keeps the date format
+// and the tag consistent with the title beside them.
+const lang = localeOf(post);
+const t = useTranslations(lang);
+const label = category === 'annonces' ? t('news.tagAnnouncement') : t('news.tagNews');
 ---
 
 <article class:list={['card', { featured }]}>
-  <a href={legacyUrl}>
+  <a href={entryHref(post)}>
     {
       cover ? (
         <Image
@@ -32,7 +39,7 @@ const label = category === 'annonces' ? 'Annonce' : 'Actualité';
     <div class="body">
       <span class="tag">{label}</span>
       <h3>{title}</h3>
-      <time datetime={date.toISOString()}>{formatDate(date)}</time>
+      <time datetime={date.toISOString()}>{formatDate(lang, date)}</time>
     </div>
   </a>
 </article>
