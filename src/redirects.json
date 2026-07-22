@@ -1,0 +1,36 @@
+{
+  "$comment": "Old WordPress URLs that no longer exist. Single source of truth: scripts/gen-redirects.mjs writes public/_redirects (Netlify) and vercel.json (Vercel) from this file. Run `npm run build` after editing.",
+  "redirects": [
+    {
+      "from": "/sample-page/",
+      "to": "/",
+      "why": "AATUJA homepage, dropped with the Judo-only scope"
+    },
+    { "from": "/sample-page/projets/", "to": "/", "why": "AATUJA page, mostly placeholder text" },
+    { "from": "/sample-page/news/", "to": "/actualites/", "why": "AATUJA news page" },
+    {
+      "from": "/about-us/",
+      "to": "/la-federation/",
+      "why": "AATUJA about page -> federation section"
+    },
+    {
+      "from": "/members-board/",
+      "to": "/la-federation/",
+      "why": "AATUJA board page -> federation section"
+    },
+    { "from": "/elementor-314/", "to": "/", "why": "internal slug of the old front page" },
+    { "from": "/category/news/", "to": "/actualites/", "why": "WordPress category archive" },
+    {
+      "from": "/category/announcements/",
+      "to": "/actualites/",
+      "why": "WordPress category archive"
+    },
+    { "from": "/category/documents/", "to": "/documents/", "why": "WordPress category archive" },
+    { "from": "/feed/", "to": "/rss.xml", "why": "WordPress default feed URL" },
+    {
+      "from": "/wp-content/uploads/*",
+      "to": "/",
+      "why": "old upload paths; media now lives under /_astro and /documents"
+    }
+  ]
+}

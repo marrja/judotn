@@ -1,0 +1,60 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/sample-page/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sample-page/projets/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sample-page/news/",
+      "destination": "/actualites/",
+      "permanent": true
+    },
+    {
+      "source": "/about-us/",
+      "destination": "/la-federation/",
+      "permanent": true
+    },
+    {
+      "source": "/members-board/",
+      "destination": "/la-federation/",
+      "permanent": true
+    },
+    {
+      "source": "/elementor-314/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/category/news/",
+      "destination": "/actualites/",
+      "permanent": true
+    },
+    {
+      "source": "/category/announcements/",
+      "destination": "/actualites/",
+      "permanent": true
+    },
+    {
+      "source": "/category/documents/",
+      "destination": "/documents/",
+      "permanent": true
+    },
+    {
+      "source": "/feed/",
+      "destination": "/rss.xml",
+      "permanent": true
+    },
+    {
+      "source": "/wp-content/uploads/:path*",
+      "destination": "/",
+      "permanent": true
+    }
+  ]
+}
