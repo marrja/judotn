@@ -68,11 +68,34 @@ const { redirects } = JSON.parse(fs.readFileSync(path.join(root, 'src/redirects.
 for (const r of redirects) {
   if (routes.has(r.from)) fail(`${r.from} redirects but is ALSO a built page`);
   const target = r.to.split('#')[0];
+  if (target.includes('*')) continue; // wildcard target, checked per-file below
   if (target.startsWith('/') && !target.includes('.') && !routes.has(target)) {
     fail(`redirect ${r.from} -> ${target} (target not built)`);
   }
 }
 console.log(`  checked ${redirects.length} redirects`);
+
+// AATUJA content was deleted rather than redirected: these paths must 404,
+// which means no built page AND no redirect rule pointing at them.
+section('deleted AATUJA paths');
+const htaccess = fs.readFileSync(path.join(dist, '.htaccess'), 'utf8');
+// Directives only — comments may legitimately mention these paths.
+const directives = htaccess
+  .split('\n')
+  .filter((l) => l.trim() && !l.trim().startsWith('#'))
+  .join('\n');
+for (const p of [
+  '/about-us/',
+  '/members-board/',
+  '/sample-page/',
+  '/sample-page/projets/',
+  '/sample-page/news/',
+]) {
+  if (routes.has(p)) fail(`${p} was built but should be gone`);
+  if (directives.includes(p)) fail(`${p} still has a redirect rule`);
+}
+if (!/ErrorDocument 404 \/404\.html/.test(htaccess)) fail('.htaccess: no ErrorDocument for 404');
+console.log('  5 AATUJA paths confirmed absent, 404 handler present');
 
 // ── 3. internal links resolve ───────────────────────────────────────────────
 section('internal links');
@@ -124,7 +147,7 @@ console.log(`  scanned ${htmlFiles.length} pages`);
 
 // ── 5. required files present ───────────────────────────────────────────────
 section('required files');
-for (const f of ['sitemap-index.xml', 'rss.xml', 'robots.txt', '404.html', '_redirects']) {
+for (const f of ['sitemap-index.xml', 'rss.xml', 'robots.txt', '404.html', '.htaccess']) {
   if (!fs.existsSync(path.join(dist, f))) fail(`missing dist/${f}`);
 }
 const pdfs = fs.existsSync(path.join(dist, 'documents'))

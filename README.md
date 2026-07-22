@@ -121,13 +121,14 @@ src/
   styles/global.css    ALL design tokens live here
   content.config.ts    zod schemas for the three collections
   navigation.ts        menus
-  redirects.json       old URL -> new URL map
+  redirects.json       old URL -> new URL map (generates public/.htaccess)
   site.js              site title, URL, contact details
 public/
+  .htaccess            GENERATED — Hostinger config, do not edit
   documents/           the PDFs themselves
   fonts/               self-hosted variable fonts
 scripts/
-  gen-redirects.mjs    writes _redirects + vercel.json from redirects.json
+  gen-redirects.mjs    writes public/.htaccess from redirects.json
   verify-build.mjs     the `npm test` suite
 ```
 
@@ -171,21 +172,51 @@ Fonts are **Manrope** and **Platypi**, both SIL OFL, both self-hosted from
 
 ---
 
-## Deploying
+## Deploying to Hostinger
 
-The site is fully static — `dist/` can go on any host.
+The site is fully static. Production domain is **judo.tn** (set in
+`src/site.js`).
 
-**Netlify** — build `npm run build`, publish `dist`. `public/_redirects` is
-generated automatically and ships with the build.
+```bash
+npm ci
+npm run build
+npm test          # optional but recommended
+```
 
-**Vercel** — build `npm run build`, output `dist`. `vercel.json` at the repo root
-carries the redirects.
+Then upload **the contents of `dist/`** into `public_html` — the files
+themselves, not the `dist` folder. Use hPanel's File Manager, FTP, or SSH:
 
-Both files are generated from `src/redirects.json` on every build, so edit that
-one file and never the outputs.
+```bash
+rsync -av --delete dist/ user@judo.tn:~/public_html/
+```
 
-Set the production domain in `src/site.js` (`SITE.url`). It drives canonical
-URLs, the sitemap and Open Graph tags.
+`--delete` removes files that are no longer part of the build. Drop it if
+anything else lives in `public_html`.
+
+### About `.htaccess`
+
+`public/.htaccess` is **generated on every build** from `src/redirects.json` —
+edit that file, never the output. Astro copies it into `dist/`, so it uploads
+with everything else. Hostinger runs LiteSpeed, which reads Apache `.htaccess`.
+
+It handles:
+
+- **404s** — `ErrorDocument 404 /404.html`, so the custom 404 page is served
+- **HTTPS + www** — forces `https://` and strips `www.`, using `%{HTTP_HOST}`
+  rather than a hardcoded domain so it also works on Hostinger's temporary
+  preview subdomain during setup
+- **Old WordPress URLs** — the six redirects listed in `src/redirects.json`
+- **Compression and caching** — `/_astro/*` is content-hashed and served
+  `immutable` for a year; HTML and unhashed files (the logo, favicon) must
+  revalidate, so replacing them takes effect immediately
+
+**Make sure hidden files are visible** in the File Manager, or `.htaccess` will
+be silently skipped on upload.
+
+### After the first deploy
+
+Check that `https://judo.tn/2024/06/25/kendo/` loads — that URL existed on the
+WordPress site and must still work. If it 404s, `.htaccess` did not upload.
 
 ---
 

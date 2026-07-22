@@ -1,37 +1,4 @@
-/**
- * Writes public/.htaccess from src/redirects.json.
- *
- * Hostinger shared hosting runs LiteSpeed, which reads Apache .htaccess files.
- * Astro copies public/ into dist/ verbatim, so the file ships with the build and
- * lands next to index.html in public_html.
- *
- * Runs automatically on `npm run build`.
- */
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const { redirects } = JSON.parse(fs.readFileSync(path.join(root, 'src/redirects.json'), 'utf8'));
-
-const escapeRe = (s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-
-/**
- * `/a/b/*.pdf` -> `^/a/b/(.+)\.pdf$`, and the target's `*` becomes `$1`.
- * Anchored on both ends so `Redirect`'s prefix matching can't over-match.
- */
-function rule({ from, to }) {
-  if (from.includes('*')) {
-    const [head, tail] = from.split('*');
-    const pattern = `^${escapeRe(head)}(.+)${escapeRe(tail)}$`;
-    return `RedirectMatch 301 ${pattern} ${to.replace('*', '$1')}`;
-  }
-  // Match with or without the trailing slash.
-  const bare = from.replace(/\/$/, '');
-  return `RedirectMatch 301 ^${escapeRe(bare)}/?$ ${to}`;
-}
-
-const htaccess = `# Generated from src/redirects.json — do not edit by hand.
+# Generated from src/redirects.json — do not edit by hand.
 # Hostinger / LiteSpeed (Apache-compatible).
 
 Options -Indexes
@@ -53,16 +20,21 @@ ErrorDocument 404 /404.html
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
 
   # Drop the www subdomain.
-  RewriteCond %{HTTP_HOST} ^www\\.(.+)$ [NC]
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
   RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
 </IfModule>
 
 # ── Redirects from the old WordPress site ─────────────────────────────
-${redirects.map(rule).join('\n')}
+RedirectMatch 301 ^/elementor-314/?$ /
+RedirectMatch 301 ^/category/news/?$ /actualites/
+RedirectMatch 301 ^/category/announcements/?$ /actualites/
+RedirectMatch 301 ^/category/documents/?$ /documents/
+RedirectMatch 301 ^/feed/?$ /rss.xml
+RedirectMatch 301 ^/wp-content/uploads/2024/06/(.+)\.pdf$ /documents/$1.pdf
 
 # ── Compression ───────────────────────────────────────────────────────
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml \\
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml \
     application/javascript application/json application/xml image/svg+xml
 </IfModule>
 
@@ -75,20 +47,16 @@ ${redirects.map(rule).join('\n')}
   SetEnvIf Request_URI "^/_astro/" FINGERPRINTED
   Header set Cache-Control "public, max-age=31536000, immutable" env=FINGERPRINTED
 
-  <FilesMatch "\\.woff2$">
+  <FilesMatch "\.woff2$">
     Header set Cache-Control "public, max-age=2592000"
   </FilesMatch>
-  <FilesMatch "\\.pdf$">
+  <FilesMatch "\.pdf$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
   # HTML and anything unhashed (logo, favicon) must revalidate so edits appear.
-  <FilesMatch "\\.(html|xml|txt|png|svg)$">
+  <FilesMatch "\.(html|xml|txt|png|svg)$">
     Header set Cache-Control "public, max-age=0, must-revalidate"
   </FilesMatch>
 
   Header set X-Content-Type-Options "nosniff"
 </IfModule>
-`;
-
-fs.writeFileSync(path.join(root, 'public/.htaccess'), htaccess);
-console.log(`redirects: wrote ${redirects.length} rules to public/.htaccess`);
