@@ -90,4 +90,10 @@ RedirectMatch 301 ^/rss\.xml/?$ /fr/rss.xml
   </FilesMatch>
 
   Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  # HSTS: browsers ignore it over plain HTTP, and the rewrite above forces HTTPS,
+  # so this only ever takes effect on the secure origin. No 'preload' — that is a
+  # one-way commitment that needs an explicit hstspreload.org submission.
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
 </IfModule>

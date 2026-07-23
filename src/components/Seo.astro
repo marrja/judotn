@@ -18,6 +18,8 @@ interface Props {
   type?: 'website' | 'article';
   publishedAt?: Date;
   noindex?: boolean;
+  /** Page-specific JSON-LD node(s), merged into the sitewide @graph. */
+  schema?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 const {
@@ -28,6 +30,7 @@ const {
   type = 'website',
   publishedAt,
   noindex = false,
+  schema,
 } = Astro.props;
 
 const { lang } = stripLocale(Astro.url.pathname);
@@ -49,6 +52,27 @@ const langAlternates = alternates(Astro.url.pathname).map((a) => ({
 /** x-default points at the English version — the site's declared fallback. */
 const { path: canonicalPath } = stripLocale(Astro.url.pathname);
 const xDefault = new URL(localePath(FALLBACK_LOCALE, canonicalPath), Astro.site).href;
+
+// Structured data. The organization node is emitted on every page so any page
+// is a self-describing, citable entry point for search and AI engines; routes
+// pass page-specific nodes (Article, BreadcrumbList) via `schema`. `@id` is
+// constant so all nodes across the site resolve to one organization entity.
+const orgId = new URL('#organization', Astro.site).href;
+const organization = {
+  '@type': 'SportsOrganization',
+  '@id': orgId,
+  name: siteTitle,
+  url: new URL(localePath(lang, '/'), Astro.site).href,
+  logo: new URL('/logo-judo.png', Astro.site).href,
+  sport: 'Judo',
+  sameAs: ['https://www.tunisie-judo.org/'],
+};
+const graph = [organization, ...(Array.isArray(schema) ? schema : schema ? [schema] : [])];
+// Escape `<` so a title containing "</script>" cannot break out of the tag.
+const jsonLd = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(
+  /</g,
+  '\\u003c',
+);
 ---
 
 <title>{fullTitle}</title>
@@ -88,3 +112,5 @@ const xDefault = new URL(localePath(FALLBACK_LOCALE, canonicalPath), Astro.site)
 <meta name="twitter:title" content={fullTitle} />
 <meta name="twitter:description" content={description} />
 <meta name="twitter:image" content={ogImage} />
+
+<script type="application/ld+json" is:inline set:html={jsonLd} />

@@ -8,8 +8,8 @@
     "prebuild": "node scripts/gen-redirects.mjs",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "test:unit": "node --test scripts/test-i18n.mjs",
-    "test": "node --test scripts/test-i18n.mjs && node scripts/verify-build.mjs",
+    "test:unit": "node --test scripts/test-i18n.mjs scripts/test-excerpt.mjs",
+    "test": "node --test scripts/test-i18n.mjs scripts/test-excerpt.mjs && node scripts/verify-build.mjs",
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write ."
   },

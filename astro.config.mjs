@@ -26,7 +26,8 @@ export default defineConfig({
       // The 404 and the root language gate are both excluded: the gate is a
       // noindex redirector, and the three language homes carry the hreflang.
       // `page` is the absolute URL, so the gate is exactly `${SITE.url}/`.
-      filter: (page) => !page.endsWith('/404') && page !== `${SITE.url}/`,
+      filter: (page) =>
+        !page.endsWith('/404') && !page.endsWith('/llms.txt') && page !== `${SITE.url}/`,
       // Emits <xhtml:link rel="alternate" hreflang> for all three languages.
       i18n: {
         defaultLocale: 'fr',

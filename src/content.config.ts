@@ -32,6 +32,9 @@ const posts = defineCollection({
       title: z.string().min(1),
       date: z.coerce.date(),
       category: z.enum(['actualites', 'annonces']),
+      // Optional authored summary. When absent, the post route derives one from
+      // the first paragraph of the body rather than repeating the title.
+      excerpt: z.string().optional(),
       cover: image().optional(),
       coverAlt: z.string().default(''),
       tags: z.array(z.string()).default([]),

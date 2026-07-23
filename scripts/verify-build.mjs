@@ -320,6 +320,75 @@ if (frHome.includes('noto-sans-arabic'))
   fail('fr/index.html: French build preloads the Arabic font (166 kB wasted)');
 console.log('  hreflang complete on home pages; Arabic rendered with Tunisian dates');
 
+// ── 8. structured data + real descriptions + article social image ───────────
+// Every indexable page carries a JSON-LD SportsOrganization node. Dated
+// permalinks also carry a BreadcrumbList; news posts additionally carry a
+// NewsArticle whose image and og:image are the post's own cover, not the logo,
+// and whose meta description is a real summary rather than the title restated.
+section('structured data');
+const docPermalinks = new Set(
+  fs
+    .readdirSync(path.join(root, 'src/content/documents/fr'))
+    .filter((f) => f.endsWith('.md'))
+    .map(
+      (f) =>
+        fs
+          .readFileSync(path.join(root, 'src/content/documents/fr', f), 'utf8')
+          .match(/^url: '(.+)'$/m)?.[1],
+    )
+    .filter(Boolean),
+);
+let ldPages = 0;
+let newsChecked = 0;
+for (const file of htmlFiles) {
+  const rel = path.relative(dist, file).split(path.sep).join('/');
+  if (rel === 'index.html' || rel === '404.html') continue; // gate + error page: no schema expected
+  const html = fs.readFileSync(file, 'utf8');
+
+  const ld = html.match(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/);
+  if (!ld) {
+    fail(`${rel}: no JSON-LD structured data`);
+    continue;
+  }
+  let data;
+  try {
+    data = JSON.parse(ld[1].replace(/\\u003c/g, '<'));
+  } catch {
+    fail(`${rel}: JSON-LD is not valid JSON`);
+    continue;
+  }
+  ldPages++;
+  const graph = data['@graph'] ?? [];
+  const types = graph.map((n) => n['@type']);
+  if (!types.includes('SportsOrganization')) fail(`${rel}: JSON-LD missing SportsOrganization`);
+
+  // Dated permalink = a post or a document.
+  if (/^(fr|en|ar)\/\d{4}\/\d{2}\/\d{2}\//.test(rel)) {
+    if (!types.includes('BreadcrumbList')) fail(`${rel}: dated page missing BreadcrumbList`);
+    const permalink = '/' + rel.replace(/^(fr|en|ar)\//, '').replace(/index\.html$/, '');
+    if (!docPermalinks.has(permalink)) {
+      // A news post: NewsArticle + a cover image (not the logo) + a non-echo description.
+      newsChecked++;
+      if (!types.includes('NewsArticle')) fail(`${rel}: news post missing NewsArticle`);
+      const og = html.match(/property="og:image" content="([^"]+)"/)?.[1] ?? '';
+      if (/logo-judo/.test(og)) fail(`${rel}: og:image is the logo, not the article cover`);
+      const article = graph.find((n) => n['@type'] === 'NewsArticle');
+      if (article && (!article.image || /logo-judo/.test(String(article.image))))
+        fail(`${rel}: NewsArticle.image missing or is the logo`);
+      const title = html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '';
+      const desc = html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '';
+      // The old bug: description was exactly the title + site name. Guard against it.
+      if (
+        desc &&
+        title &&
+        desc.replace(/\s*—\s*FTJUDO$/, '') === title.replace(/\s*—\s*FTJUDO$/, '')
+      )
+        fail(`${rel}: meta description just restates the title`);
+    }
+  }
+}
+console.log(`  ${ldPages} pages carry JSON-LD; ${newsChecked} news posts have NewsArticle + cover`);
+
 console.log(
   failures === 0
     ? `\nAll checks passed — ${htmlFiles.length} pages, ${frUrls.length} French permalinks moved to /fr/, 3 locales.`

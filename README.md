@@ -77,6 +77,7 @@ each time (name it after the French URL slug):
 title: 'Titre de l’actualité'
 date: 2026-07-22T10:00:00Z
 category: 'actualites' # or 'annonces'
+excerpt: 'Résumé court pour Google et les réseaux sociaux.' # optional
 cover: '../../../assets/posts/ma-photo.jpg' # optional
 coverAlt: 'Description de la photo pour les lecteurs d’écran'
 tags: ['Judo'] # optional
@@ -86,7 +87,11 @@ url: '/2026/07/22/titre-de-lactualite/'
 Le corps de l’article, en Markdown. Il peut être vide.
 ```
 
-Only `title`, `coverAlt`, `tags` and the body change between languages — `date`,
+`excerpt` becomes the `<meta description>` and the social/JSON-LD summary. Leave
+it out and the first paragraph of the body is used instead — only set it to
+override that. `cover` is also used as the `og:image`/article image for sharing.
+
+Only `title`, `excerpt`, `coverAlt`, `tags` and the body change between languages — `date`,
 `cover` and **`url` stay identical in all three files** (the `/fr/`, `/en/` and
 `/ar/` prefixes are added automatically). The Arabic file is written in Arabic,
 and the page turns right-to-left on its own.

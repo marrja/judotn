@@ -12,9 +12,10 @@ interface Props {
   type?: 'website' | 'article';
   publishedAt?: Date;
   noindex?: boolean;
+  schema?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title, description, image, type, publishedAt, noindex } = Astro.props;
+const { title, description, image, type, publishedAt, noindex, schema } = Astro.props;
 
 // Every component derives its own locale from the path rather than being
 // handed one. There is exactly one source of truth (the URL) and no prop to
@@ -52,7 +53,7 @@ const t = useTranslations(lang);
         />
       )
     }
-    <Seo {title} {description} {image} {type} {publishedAt} {noindex} />
+    <Seo {title} {description} {image} {type} {publishedAt} {noindex} {schema} />
     <slot name="head" />
   </head>
   <body>
