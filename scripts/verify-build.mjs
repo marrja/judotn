@@ -389,6 +389,21 @@ for (const file of htmlFiles) {
 }
 console.log(`  ${ldPages} pages carry JSON-LD; ${newsChecked} news posts have NewsArticle + cover`);
 
+// ── 9. analytics on content pages, not on the redirect gate ─────────────────
+// Umami (cookieless) + GA4 load through BaseLayout, so every real page carries
+// them. The root gate redirects instantly and is deliberately left untracked —
+// the localized page it lands on is what gets counted.
+section('analytics');
+const UMAMI = 'analytics.takolor.net/script.js';
+const GA = 'G-H7DGSND9DP';
+const contentSample = fs.readFileSync(path.join(dist, 'fr/index.html'), 'utf8');
+if (!contentSample.includes(UMAMI)) fail('fr/index.html: Umami script missing');
+if (!contentSample.includes(GA)) fail('fr/index.html: GA4 tag missing');
+const rootGate = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+if (rootGate.includes(UMAMI) || rootGate.includes(GA))
+  fail('root gate should not carry analytics (it redirects before they fire)');
+console.log('  Umami + GA4 on content pages; redirect gate untracked');
+
 console.log(
   failures === 0
     ? `\nAll checks passed — ${htmlFiles.length} pages, ${frUrls.length} French permalinks moved to /fr/, 3 locales.`

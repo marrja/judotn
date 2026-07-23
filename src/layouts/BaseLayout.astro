@@ -1,5 +1,6 @@
 ---
 import Seo from '../components/Seo.astro';
+import Analytics from '../components/Analytics.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import { BCP47, DIR, localePath, stripLocale, useTranslations } from '../i18n/index.ts';
@@ -55,6 +56,7 @@ const t = useTranslations(lang);
     }
     <Seo {title} {description} {image} {type} {publishedAt} {noindex} {schema} />
     <slot name="head" />
+    <Analytics />
   </head>
   <body>
     <a class="skip-link" href="#main">{t('a11y.skipLink')}</a>

@@ -1,0 +1,34 @@
+---
+/**
+ * Third-party analytics: self-hosted Umami (cookieless) + Google Analytics 4.
+ *
+ * Only emitted in production builds — `astro dev` and CI previews must not count
+ * as real traffic. `is:inline` is required: Astro would otherwise bundle these
+ * and drop the vendor attributes (data-website-id) and the gtag bootstrap.
+ *
+ * The GA bootstrap is injected via set:html as a raw string so it ships exactly
+ * as Google publishes it (the `arguments` form included) without eslint or
+ * prettier trying to reformat vendor code.
+ *
+ * Umami needs no cookie consent. GA4 does set cookies; if EU/GDPR consent is
+ * ever required, gate the GA block behind a consent choice (Umami can stay).
+ */
+const GA_ID = 'G-H7DGSND9DP';
+const gtagBootstrap = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${GA_ID}')`;
+const enabled = import.meta.env.PROD;
+---
+
+{
+  enabled && (
+    <>
+      <script
+        is:inline
+        defer
+        src="https://analytics.takolor.net/script.js"
+        data-website-id="1fec9b32-d614-4da0-8a55-2ae5de5e720f"
+      />
+      <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
+      <script is:inline set:html={gtagBootstrap} />
+    </>
+  )
+}
